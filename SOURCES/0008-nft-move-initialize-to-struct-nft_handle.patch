@@ -1,0 +1,91 @@
+From 993eea7a78dd3690cb864b58c7056d5851550f5f Mon Sep 17 00:00:00 2001
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Date: Sat, 17 Nov 2018 18:38:30 +0100
+Subject: [PATCH] nft: move initialize to struct nft_handle
+
+Move this to the structure that stores, stateful information. Introduce
+nft_table_initialized() and use it.
+
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 5016d1eb84f951d84f5a0c18f994f40677ad0643)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 14 ++++++++++----
+ iptables/nft.h |  2 +-
+ 2 files changed, 11 insertions(+), 5 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index fdb4ead55a873..9b479307a2fbc 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -587,13 +587,19 @@ struct builtin_table xtables_bridge[NFT_TABLE_MAX] = {
+ 	},
+ };
+ 
++static bool nft_table_initialized(const struct nft_handle *h,
++				  enum nft_table_type type)
++{
++	return h->table[type].initialized;
++}
++
+ static int nft_table_builtin_add(struct nft_handle *h,
+ 				 struct builtin_table *_t)
+ {
+ 	struct nftnl_table *t;
+ 	int ret;
+ 
+-	if (_t->initialized)
++	if (nft_table_initialized(h, _t->type))
+ 		return 0;
+ 
+ 	t = nftnl_table_alloc();
+@@ -707,7 +713,7 @@ static int nft_xt_builtin_init(struct nft_handle *h, const char *table)
+ 	if (t == NULL)
+ 		return -1;
+ 
+-	if (t->initialized)
++	if (nft_table_initialized(h, t->type))
+ 		return 0;
+ 
+ 	if (nft_table_builtin_add(h, t) < 0)
+@@ -715,7 +721,7 @@ static int nft_xt_builtin_init(struct nft_handle *h, const char *table)
+ 
+ 	nft_chain_builtin_init(h, t);
+ 
+-	t->initialized = true;
++	h->table[t->type].initialized = true;
+ 
+ 	return 0;
+ }
+@@ -1875,7 +1881,7 @@ static int __nft_table_flush(struct nft_handle *h, const char *table)
+ 
+ 	_t = nft_table_builtin_find(h, table);
+ 	assert(_t);
+-	_t->initialized = false;
++	h->table[_t->type].initialized = false;
+ 
+ 	flush_chain_cache(h, table);
+ 	flush_rule_cache(h, table);
+diff --git a/iptables/nft.h b/iptables/nft.h
+index 1c028206221c4..b9ba66b110042 100644
+--- a/iptables/nft.h
++++ b/iptables/nft.h
+@@ -25,7 +25,6 @@ struct builtin_table {
+ 	const char *name;
+ 	enum nft_table_type type;
+ 	struct builtin_chain chains[NF_INET_NUMHOOKS];
+-	bool initialized;
+ };
+ 
+ struct nft_handle {
+@@ -41,6 +40,7 @@ struct nft_handle {
+ 	struct builtin_table	*tables;
+ 	struct {
+ 		struct nftnl_chain_list *chain_cache;
++		bool			initialized;
+ 	} table[NFT_TABLE_MAX];
+ 	struct nftnl_rule_list	*rule_cache;
+ 	bool			restore;
+-- 
+2.20.1
+

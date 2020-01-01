@@ -1,0 +1,258 @@
+From ec020c1d789d9d8562105af2cd2fe23b797505d0 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Mon, 4 Feb 2019 21:52:53 +0100
+Subject: [PATCH] xtables: Fix for false-positive rule matching
+
+When comparing two rules with non-standard targets, differences in
+targets' payloads wasn't respected.
+
+The cause is a rather hideous one: Unlike xtables_find_match(),
+xtables_find_target() did not care whether the found target was already
+in use or not, so the same target instance was assigned to both rules
+and therefore payload comparison happened over the same memory location.
+
+With legacy iptables it is not possible to reuse a target: The only case
+where two rules (i.e., iptables_command_state instances) could exist at
+the same time is when comparing rules, but that's handled using libiptc.
+
+The above change clashes with ebtables-nft's reuse of target objects:
+While input parsing still just assigns the object from xtables_targets
+list, rule conversion from nftnl to iptables_command_state allocates new
+data. To fix this, make ebtables-nft input parsing use the common
+command_jump() routine instead of its own simplified copy. In turn, this
+also eliminates the ebtables-nft-specific variants of parse_target(),
+though with a slight change of behaviour: Names of user-defined chains
+are no longer allowed to contain up to 31 but merely 28 characters.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 148131f20421046fea028e638581e938ec985783)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-bridge.c                         | 10 ++++
+ iptables/nft-bridge.h                         |  2 -
+ iptables/nft-shared.c                         |  5 ++
+ .../testcases/iptables/0005-delete-rules_0    |  7 +++
+ iptables/xtables-eb-translate.c               | 24 +---------
+ iptables/xtables-eb.c                         | 47 +------------------
+ libxtables/xtables.c                          | 18 ++++++-
+ 7 files changed, 41 insertions(+), 72 deletions(-)
+
+diff --git a/iptables/nft-bridge.c b/iptables/nft-bridge.c
+index ad583a60c424d..140fcf0a31b84 100644
+--- a/iptables/nft-bridge.c
++++ b/iptables/nft-bridge.c
+@@ -45,6 +45,16 @@ void ebt_cs_clean(struct iptables_command_state *cs)
+ 		free(m);
+ 		m = nm;
+ 	}
++
++	if (cs->target) {
++		free(cs->target->t);
++		cs->target->t = NULL;
++
++		if (cs->target == cs->target->next) {
++			free(cs->target);
++			cs->target = NULL;
++		}
++	}
+ }
+ 
+ static void ebt_print_mac(const unsigned char *mac)
+diff --git a/iptables/nft-bridge.h b/iptables/nft-bridge.h
+index de52cd7195bbb..d90066f1030a2 100644
+--- a/iptables/nft-bridge.h
++++ b/iptables/nft-bridge.h
+@@ -32,7 +32,6 @@ int ebt_get_mac_and_mask(const char *from, unsigned char *to, unsigned char *mas
+  */
+ 
+ #define EBT_TABLE_MAXNAMELEN 32
+-#define EBT_CHAIN_MAXNAMELEN EBT_TABLE_MAXNAMELEN
+ #define EBT_FUNCTION_MAXNAMELEN EBT_TABLE_MAXNAMELEN
+ 
+ /* verdicts >0 are "branches" */
+@@ -122,6 +121,5 @@ void ebt_add_match(struct xtables_match *m,
+ void ebt_add_watcher(struct xtables_target *watcher,
+                      struct iptables_command_state *cs);
+ int ebt_command_default(struct iptables_command_state *cs);
+-struct xtables_target *ebt_command_jump(const char *jumpto);
+ 
+ #endif
+diff --git a/iptables/nft-shared.c b/iptables/nft-shared.c
+index dfc1c803cb68d..ce40787f92f7d 100644
+--- a/iptables/nft-shared.c
++++ b/iptables/nft-shared.c
+@@ -687,6 +687,11 @@ void nft_clear_iptables_command_state(struct iptables_command_state *cs)
+ 	if (cs->target) {
+ 		free(cs->target->t);
+ 		cs->target->t = NULL;
++
++		if (cs->target == cs->target->next) {
++			free(cs->target);
++			cs->target = NULL;
++		}
+ 	}
+ }
+ 
+diff --git a/iptables/tests/shell/testcases/iptables/0005-delete-rules_0 b/iptables/tests/shell/testcases/iptables/0005-delete-rules_0
+index 9312fd53c3437..5038cbce5a5cf 100755
+--- a/iptables/tests/shell/testcases/iptables/0005-delete-rules_0
++++ b/iptables/tests/shell/testcases/iptables/0005-delete-rules_0
+@@ -5,3 +5,10 @@
+ $XT_MULTI iptables -A FORWARD -i eth23 -o eth42 -j DROP
+ $XT_MULTI iptables -D FORWARD -i eth23 -o eth42 -j REJECT
+ [[ $? -eq 1 ]] || exit 1
++
++# test incorrect deletion of rules with deviating payload
++# in non-standard target
++
++$XT_MULTI iptables -A FORWARD -i eth23 -o eth42 -j MARK --set-mark 23
++$XT_MULTI iptables -D FORWARD -i eth23 -o eth42 -j MARK --set-mark 42
++[[ $? -eq 1 ]] || exit 1
+diff --git a/iptables/xtables-eb-translate.c b/iptables/xtables-eb-translate.c
+index f98c385555eb1..0fe14d2d0db32 100644
+--- a/iptables/xtables-eb-translate.c
++++ b/iptables/xtables-eb-translate.c
+@@ -64,27 +64,6 @@ static int parse_rule_number(const char *rule)
+ 	return rule_nr;
+ }
+ 
+-static const char *
+-parse_target(const char *targetname)
+-{
+-	const char *ptr;
+-
+-	if (strlen(targetname) < 1)
+-		xtables_error(PARAMETER_PROBLEM,
+-			      "Invalid target name (too short)");
+-
+-	if (strlen(targetname)+1 > EBT_CHAIN_MAXNAMELEN)
+-		xtables_error(PARAMETER_PROBLEM,
+-			      "Invalid target '%s' (%d chars max)",
+-			      targetname, EBT_CHAIN_MAXNAMELEN);
+-
+-	for (ptr = targetname; *ptr; ptr++)
+-		if (isspace(*ptr))
+-			xtables_error(PARAMETER_PROBLEM,
+-				      "Invalid target name `%s'", targetname);
+-	return targetname;
+-}
+-
+ static int get_current_chain(const char *chain)
+ {
+ 	if (strcmp(chain, "PREROUTING") == 0)
+@@ -411,8 +390,7 @@ print_zero:
+ 				break;
+ 			} else if (c == 'j') {
+ 				ebt_check_option2(&flags, OPT_JUMP);
+-				cs.jumpto = parse_target(optarg);
+-				cs.target = ebt_command_jump(cs.jumpto);
++				command_jump(&cs);
+ 				break;
+ 			} else if (c == 's') {
+ 				ebt_check_option2(&flags, OPT_SOURCE);
+diff --git a/iptables/xtables-eb.c b/iptables/xtables-eb.c
+index 4c52c29aa4817..55cb0fe204748 100644
+--- a/iptables/xtables-eb.c
++++ b/iptables/xtables-eb.c
+@@ -139,27 +139,6 @@ static int parse_rule_number(const char *rule)
+ 	return rule_nr;
+ }
+ 
+-static const char *
+-parse_target(const char *targetname)
+-{
+-	const char *ptr;
+-
+-	if (strlen(targetname) < 1)
+-		xtables_error(PARAMETER_PROBLEM,
+-			      "Invalid target name (too short)");
+-
+-	if (strlen(targetname)+1 > EBT_CHAIN_MAXNAMELEN)
+-		xtables_error(PARAMETER_PROBLEM,
+-			      "Invalid target '%s' (%d chars max)",
+-			      targetname, EBT_CHAIN_MAXNAMELEN);
+-
+-	for (ptr = targetname; *ptr; ptr++)
+-		if (isspace(*ptr))
+-			xtables_error(PARAMETER_PROBLEM,
+-				      "Invalid target name `%s'", targetname);
+-	return targetname;
+-}
+-
+ static int
+ append_entry(struct nft_handle *h,
+ 	     const char *chain,
+@@ -376,29 +355,6 @@ static struct option *merge_options(struct option *oldopts,
+ 	return merge;
+ }
+ 
+-/*
+- * More glue code.
+- */
+-struct xtables_target *ebt_command_jump(const char *jumpto)
+-{
+-	struct xtables_target *target;
+-	unsigned int verdict;
+-
+-	/* Standard target? */
+-	if (!ebt_fill_target(jumpto, &verdict))
+-		jumpto = "standard";
+-
+-	/* For ebtables, all targets are preloaded. Hence it is either in
+-	 * xtables_targets or a custom chain to jump to, in which case
+-	 * returning NULL is fine. */
+-	for (target = xtables_targets; target; target = target->next) {
+-		if (!strcmp(target->name, jumpto))
+-			break;
+-	}
+-
+-	return target;
+-}
+-
+ static void print_help(const struct xtables_target *t,
+ 		       const struct xtables_rule_match *m, const char *table)
+ {
+@@ -1066,8 +1022,7 @@ print_zero:
+ 			} else if (c == 'j') {
+ 				ebt_check_option2(&flags, OPT_JUMP);
+ 				if (strcmp(optarg, "CONTINUE") != 0) {
+-					cs.jumpto = parse_target(optarg);
+-					cs.target = ebt_command_jump(cs.jumpto);
++					command_jump(&cs);
+ 				}
+ 				break;
+ 			} else if (c == 's') {
+diff --git a/libxtables/xtables.c b/libxtables/xtables.c
+index ea9bb102c8eb4..895f6988eaf57 100644
+--- a/libxtables/xtables.c
++++ b/libxtables/xtables.c
+@@ -756,8 +756,24 @@ xtables_find_target(const char *name, enum xtables_tryload tryload)
+ 	}
+ 
+ 	for (ptr = xtables_targets; ptr; ptr = ptr->next) {
+-		if (extension_cmp(name, ptr->name, ptr->family))
++		if (extension_cmp(name, ptr->name, ptr->family)) {
++			struct xtables_target *clone;
++
++			/* First target of this type: */
++			if (ptr->t == NULL)
++				break;
++
++			/* Second and subsequent clones */
++			clone = xtables_malloc(sizeof(struct xtables_target));
++			memcpy(clone, ptr, sizeof(struct xtables_target));
++			clone->udata = NULL;
++			clone->tflags = 0;
++			/* This is a clone: */
++			clone->next = clone;
++
++			ptr = clone;
+ 			break;
++		}
+ 	}
+ 
+ #ifndef NO_SHARED_LIBS
+-- 
+2.20.1
+

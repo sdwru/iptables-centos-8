@@ -1,0 +1,99 @@
+From c900978466fc50bee651f83eab8fd598b7f88183 Mon Sep 17 00:00:00 2001
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Date: Sat, 17 Nov 2018 18:10:15 +0100
+Subject: [PATCH] nft: add type field to builtin_table
+
+Use enum nft_table_type to set the new type field in the structure that
+define tables.
+
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 9847abe6fbb91621f6494df8243ff96f04efdc4a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 8 ++++++++
+ iptables/nft.h | 1 +
+ 2 files changed, 9 insertions(+)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 36529048a0ca6..f0a60e1f568af 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -379,6 +379,7 @@ static int batch_rule_add(struct nft_handle *h, enum obj_update_type type,
+ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ 	[NFT_TABLE_RAW] = {
+ 		.name	= "raw",
++		.type	= NFT_TABLE_RAW,
+ 		.chains = {
+ 			{
+ 				.name	= "PREROUTING",
+@@ -396,6 +397,7 @@ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ 	},
+ 	[NFT_TABLE_MANGLE] = {
+ 		.name	= "mangle",
++		.type	= NFT_TABLE_MANGLE,
+ 		.chains = {
+ 			{
+ 				.name	= "PREROUTING",
+@@ -431,6 +433,7 @@ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ 	},
+ 	[NFT_TABLE_FILTER] = {
+ 		.name	= "filter",
++		.type	= NFT_TABLE_FILTER,
+ 		.chains = {
+ 			{
+ 				.name	= "INPUT",
+@@ -454,6 +457,7 @@ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ 	},
+ 	[NFT_TABLE_SECURITY] = {
+ 		.name	= "security",
++		.type	= NFT_TABLE_SECURITY,
+ 		.chains = {
+ 			{
+ 				.name	= "INPUT",
+@@ -477,6 +481,7 @@ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ 	},
+ 	[NFT_TABLE_NAT] = {
+ 		.name	= "nat",
++		.type	= NFT_TABLE_NAT,
+ 		.chains = {
+ 			{
+ 				.name	= "PREROUTING",
+@@ -511,6 +516,7 @@ struct builtin_table xtables_ipv4[NFT_TABLE_MAX] = {
+ struct builtin_table xtables_arp[NFT_TABLE_MAX] = {
+ 	[NFT_TABLE_FILTER] = {
+ 	.name   = "filter",
++	.type	= NFT_TABLE_FILTER,
+ 	.chains = {
+ 			{
+ 				.name   = "INPUT",
+@@ -533,6 +539,7 @@ struct builtin_table xtables_arp[NFT_TABLE_MAX] = {
+ struct builtin_table xtables_bridge[NFT_TABLE_MAX] = {
+ 	[NFT_TABLE_FILTER] = {
+ 		.name = "filter",
++		.type	= NFT_TABLE_FILTER,
+ 		.chains = {
+ 			{
+ 				.name   = "INPUT",
+@@ -556,6 +563,7 @@ struct builtin_table xtables_bridge[NFT_TABLE_MAX] = {
+ 	},
+ 	[NFT_TABLE_NAT] = {
+ 		.name = "nat",
++		.type	= NFT_TABLE_NAT,
+ 		.chains = {
+ 			{
+ 				.name   = "PREROUTING",
+diff --git a/iptables/nft.h b/iptables/nft.h
+index 6229221bd51f7..85c894e80e02e 100644
+--- a/iptables/nft.h
++++ b/iptables/nft.h
+@@ -23,6 +23,7 @@ struct builtin_chain {
+ 
+ struct builtin_table {
+ 	const char *name;
++	enum nft_table_type type;
+ 	struct builtin_chain chains[NF_INET_NUMHOOKS];
+ 	bool initialized;
+ 	struct nftnl_chain_list *chain_cache;
+-- 
+2.20.1
+

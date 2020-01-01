@@ -1,0 +1,95 @@
+From 598f69c07427a1457c3ac7da766d1c07d64b63ce Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Tue, 15 Jan 2019 23:23:03 +0100
+Subject: [PATCH] nft: Add new builtin chains to cache immediately
+
+Newly created builtin chains missing from cache was the sole reason for
+the immediate calls to nft_commit(). With nft_chain_builtin_add()
+inserting the new chain into the table's chain list, this is not needed
+anymore. Just make sure batch_obj_del() doesn't free the payload of
+NFT_COMPAT_CHAIN_ADD jobs since it contains the new chain which has
+been added to cache.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 2b801fc515ae094d04207e840ed191196292b968)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 30 +++++++++---------------------
+ 1 file changed, 9 insertions(+), 21 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 9c0ad9a2d054f..c2af1a6fd0985 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -644,6 +644,7 @@ static void nft_chain_builtin_add(struct nft_handle *h,
+ 		return;
+ 
+ 	batch_chain_add(h, NFT_COMPAT_CHAIN_ADD, c);
++	nftnl_chain_list_add_tail(c, h->table[table->type].chain_cache);
+ }
+ 
+ /* find if built-in table already exists */
+@@ -1216,8 +1217,11 @@ nft_rule_append(struct nft_handle *h, const char *chain, const char *table,
+ 		h->ops->print_rule(r, 0, FMT_PRINT_RULE);
+ 
+ 	c = nft_chain_find(h, table, chain);
+-	if (c)
+-		nftnl_chain_rule_add_tail(r, c);
++	if (!c) {
++		errno = ENOENT;
++		return 0;
++	}
++	nftnl_chain_rule_add_tail(r, c);
+ 
+ 	return 1;
+ }
+@@ -2282,16 +2286,8 @@ int nft_rule_list(struct nft_handle *h, const char *chain, const char *table,
+ 	bool found = false;
+ 
+ 	/* If built-in chains don't exist for this table, create them */
+-	if (nft_xtables_config_load(h, XTABLES_CONFIG_DEFAULT, 0) < 0) {
++	if (nft_xtables_config_load(h, XTABLES_CONFIG_DEFAULT, 0) < 0)
+ 		nft_xt_builtin_init(h, table);
+-		/* Force table and chain creation, otherwise first iptables -L
+-		 * lists no table/chains.
+-		 */
+-		if (!list_empty(&h->obj_list)) {
+-			nft_commit(h);
+-			flush_chain_cache(h, NULL);
+-		}
+-	}
+ 
+ 	ops = nft_family_ops_lookup(h->family);
+ 
+@@ -2397,16 +2393,8 @@ int nft_rule_list_save(struct nft_handle *h, const char *chain,
+ 	int ret = 0;
+ 
+ 	/* If built-in chains don't exist for this table, create them */
+-	if (nft_xtables_config_load(h, XTABLES_CONFIG_DEFAULT, 0) < 0) {
++	if (nft_xtables_config_load(h, XTABLES_CONFIG_DEFAULT, 0) < 0)
+ 		nft_xt_builtin_init(h, table);
+-		/* Force table and chain creation, otherwise first iptables -L
+-		 * lists no table/chains.
+-		 */
+-		if (!list_empty(&h->obj_list)) {
+-			nft_commit(h);
+-			flush_chain_cache(h, NULL);
+-		}
+-	}
+ 
+ 	if (!nft_is_table_compatible(h, table)) {
+ 		xtables_error(OTHER_PROBLEM, "table `%s' is incompatible, use 'nft' tool.\n", table);
+@@ -2525,8 +2513,8 @@ static void batch_obj_del(struct nft_handle *h, struct obj_update *o)
+ 		break;
+ 	case NFT_COMPAT_CHAIN_ZERO:
+ 	case NFT_COMPAT_CHAIN_USER_ADD:
+-		break;
+ 	case NFT_COMPAT_CHAIN_ADD:
++		break;
+ 	case NFT_COMPAT_CHAIN_USER_DEL:
+ 	case NFT_COMPAT_CHAIN_USER_FLUSH:
+ 	case NFT_COMPAT_CHAIN_UPDATE:
+-- 
+2.20.1
+

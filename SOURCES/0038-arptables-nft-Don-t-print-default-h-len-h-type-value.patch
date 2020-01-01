@@ -1,0 +1,116 @@
+From 65303eb285ba082c24b2f2150918d63ed6c8398f Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 31 Jan 2019 16:12:55 +0100
+Subject: [PATCH] arptables-nft: Don't print default h-len/h-type values
+
+Default values for --h-len and --h-type being printed for rules where
+user didn't provide them is unexpected and confusing. The drawback is
+the opposite: If user provided either of them with their default value,
+they are later omitted when listing rules. Though since unlike legacy
+arptables we can't distinguish between not specified and specified with
+default value, we can't fix both - so choose to optimize for the more
+likely case.
+
+Fixes: 5aecb2d8bfdda ("arptables: pre-init hlen and ethertype")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 84331e3ed3f8eb9d53c00c221113ad16b209968a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-arp.c                            |  4 +--
+ .../arptables/0001-arptables-save-restore_0   | 32 +++++++++----------
+ .../0002-arptables-restore-defaults_0         |  6 ++--
+ 3 files changed, 21 insertions(+), 21 deletions(-)
+
+diff --git a/iptables/nft-arp.c b/iptables/nft-arp.c
+index 2cbdf23214049..37b0985377bef 100644
+--- a/iptables/nft-arp.c
++++ b/iptables/nft-arp.c
+@@ -537,7 +537,7 @@ after_devsrc:
+ 
+ after_devdst:
+ 
+-	if (fw->arp.arhln_mask != 0) {
++	if (fw->arp.arhln_mask != 255 || fw->arp.arhln != 6) {
+ 		printf("%s%s", sep, fw->arp.invflags & ARPT_INV_ARPHLN
+ 			? "! " : "");
+ 		printf("--h-length %d", fw->arp.arhln);
+@@ -561,7 +561,7 @@ after_devdst:
+ 		sep = " ";
+ 	}
+ 
+-	if (fw->arp.arhrd_mask != 0) {
++	if (fw->arp.arhrd_mask != 65535 || fw->arp.arhrd != htons(1)) {
+ 		uint16_t tmp = ntohs(fw->arp.arhrd);
+ 
+ 		printf("%s%s", sep, fw->arp.invflags & ARPT_INV_ARPHRD
+diff --git a/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0 b/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
+index 0664e3b38d5e8..e10f61cc8f95b 100755
+--- a/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
++++ b/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
+@@ -35,22 +35,22 @@ DUMP='*filter
+ :INPUT ACCEPT
+ :OUTPUT DROP
+ :foo -
+--A INPUT -j ACCEPT -s 10.0.0.0/8 --h-length 6 --h-type 1
+--A INPUT -j ACCEPT -d 192.168.123.1 --h-length 6 --h-type 1
+--A INPUT -j ACCEPT --src-mac fe:ed:ba:be:00:01 --h-length 6 --h-type 1
+--A INPUT -j ACCEPT --dst-mac fe:ed:ba:be:00:01 --h-length 6 --h-type 1
+--A INPUT -j foo --h-length 6 --h-type 1
+--A INPUT  --h-length 6 --h-type 1
+--A OUTPUT -j ACCEPT -o lo --h-length 6 --h-type 1
+--A OUTPUT -j mangle -o eth134 --h-length 6 --h-type 1 --mangle-ip-s 10.0.0.1
+--A OUTPUT -j CLASSIFY -o eth432 --h-length 6 --h-type 1 --set-class feed:babe
+--A OUTPUT -j CLASSIFY -o eth432 --h-length 6 --opcode 1 --h-type 1 --set-class feed:babe
+--A foo -j ACCEPT -i lo --h-length 6 --h-type 1
+--A foo -j ACCEPT --h-length 6 --h-type 1
+--A foo -j MARK --h-length 6 --h-type 1 --set-mark 12345
+--A foo -j ACCEPT --h-length 6 --opcode 1 --h-type 1
+--A foo -j ACCEPT --h-length 6 --h-type 1 --proto-type 0x800
+--A foo -j ACCEPT -i lo --h-length 6 --opcode 1 --h-type 1 --proto-type 0x800
++-A INPUT -j ACCEPT -s 10.0.0.0/8
++-A INPUT -j ACCEPT -d 192.168.123.1
++-A INPUT -j ACCEPT --src-mac fe:ed:ba:be:00:01
++-A INPUT -j ACCEPT --dst-mac fe:ed:ba:be:00:01
++-A INPUT -j foo
++-A INPUT 
++-A OUTPUT -j ACCEPT -o lo
++-A OUTPUT -j mangle -o eth134 --mangle-ip-s 10.0.0.1
++-A OUTPUT -j CLASSIFY -o eth432 --set-class feed:babe
++-A OUTPUT -j CLASSIFY -o eth432 --opcode 1 --set-class feed:babe
++-A foo -j ACCEPT -i lo
++-A foo -j ACCEPT
++-A foo -j MARK --set-mark 12345
++-A foo -j ACCEPT --opcode 1
++-A foo -j ACCEPT --proto-type 0x800
++-A foo -j ACCEPT -i lo --opcode 1 --proto-type 0x800
+ '
+ 
+ diff -u <(echo -e "$DUMP") <($XT_MULTI arptables-save)
+diff --git a/iptables/tests/shell/testcases/arptables/0002-arptables-restore-defaults_0 b/iptables/tests/shell/testcases/arptables/0002-arptables-restore-defaults_0
+index d742c3d506305..b2ed95e87bb40 100755
+--- a/iptables/tests/shell/testcases/arptables/0002-arptables-restore-defaults_0
++++ b/iptables/tests/shell/testcases/arptables/0002-arptables-restore-defaults_0
+@@ -11,7 +11,7 @@ set -e
+ DUMP='*filter
+ :OUTPUT ACCEPT
+ -A OUTPUT -j mangle --mangle-ip-s 10.0.0.1
+--A OUTPUT -j mangle --h-length 6 --h-type 1 --mangle-ip-d 10.0.0.2
++-A OUTPUT -j mangle --mangle-ip-d 10.0.0.2
+ '
+ 
+ # note how mangle-ip-s is unset in second rule
+@@ -19,8 +19,8 @@ DUMP='*filter
+ EXPECT='*filter
+ :INPUT ACCEPT
+ :OUTPUT ACCEPT
+--A OUTPUT -j mangle --h-length 6 --h-type 1 --mangle-ip-s 10.0.0.1
+--A OUTPUT -j mangle --h-length 6 --h-type 1 --mangle-ip-d 10.0.0.2
++-A OUTPUT -j mangle --mangle-ip-s 10.0.0.1
++-A OUTPUT -j mangle --mangle-ip-d 10.0.0.2
+ '
+ 
+ $XT_MULTI arptables -F
+-- 
+2.20.1
+

@@ -1,0 +1,85 @@
+From 96b7b6eb3c963dc835a3f132f037050d032aaa77 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 20 Dec 2018 16:09:14 +0100
+Subject: [PATCH] xtables: Optimize flushing a specific chain
+
+If a chain name is given to nft_rule_flush(), make use of
+nftnl_chain_list_lookup_byname().
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 196841c9597eff536b59655b60df088ee1929904)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 883fb3db2c671..a23acbcc9b100 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -1496,10 +1496,14 @@ int nft_rule_save(struct nft_handle *h, const char *table, unsigned int format)
+ }
+ 
+ static void
+-__nft_rule_flush(struct nft_handle *h, const char *table, const char *chain)
++__nft_rule_flush(struct nft_handle *h, const char *table,
++		 const char *chain, bool verbose)
+ {
+ 	struct nftnl_rule *r;
+ 
++	if (verbose)
++		fprintf(stdout, "Flushing chain `%s'\n", chain);
++
+ 	r = nftnl_rule_alloc();
+ 	if (r == NULL)
+ 		return;
+@@ -1533,7 +1537,7 @@ static int __nft_chain_user_flush(struct nftnl_chain *c, void *data)
+ 		return 0;
+ 
+ 	if (!nftnl_chain_is_set(c, NFTNL_CHAIN_HOOKNUM))
+-		__nft_rule_flush(h, table, chain);
++		__nft_rule_flush(h, table, chain, false);
+ 
+ 	return 0;
+ }
+@@ -1573,6 +1577,16 @@ int nft_rule_flush(struct nft_handle *h, const char *chain, const char *table,
+ 		goto err;
+ 	}
+ 
++	if (chain) {
++		c = nftnl_chain_list_lookup_byname(list, chain);
++		if (!c)
++			return 0;
++
++		__nft_rule_flush(h, table, chain, verbose);
++		flush_rule_cache(c);
++		return 1;
++	}
++
+ 	iter = nftnl_chain_list_iter_create(list);
+ 	if (iter == NULL) {
+ 		ret = 1;
+@@ -1584,18 +1598,8 @@ int nft_rule_flush(struct nft_handle *h, const char *chain, const char *table,
+ 		const char *chain_name =
+ 			nftnl_chain_get_str(c, NFTNL_CHAIN_NAME);
+ 
+-		if (chain != NULL && strcmp(chain, chain_name) != 0)
+-			goto next;
+-
+-		if (verbose)
+-			fprintf(stdout, "Flushing chain `%s'\n", chain_name);
+-
+-		__nft_rule_flush(h, table, chain_name);
++		__nft_rule_flush(h, table, chain_name, verbose);
+ 		flush_rule_cache(c);
+-
+-		if (chain != NULL)
+-			break;
+-next:
+ 		c = nftnl_chain_list_iter_next(iter);
+ 	}
+ 	nftnl_chain_list_iter_destroy(iter);
+-- 
+2.20.1
+

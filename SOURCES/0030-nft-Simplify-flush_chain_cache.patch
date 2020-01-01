@@ -1,0 +1,66 @@
+From 329090e1c375905ec388ac1025b4e9fab883c3ca Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Sun, 30 Dec 2018 20:06:09 +0100
+Subject: [PATCH] nft: Simplify flush_chain_cache()
+
+With all the checks for 'tablename' being non-NULL, this code was rather
+stupid and really hard to read. And the fix is indeed quite simple: If a
+table name was given, use nft_table_builtin_find() and just flush its
+chain cache. Otherwise iterate over all builtin tables without any
+conditionals for 'tablename'.
+
+Fixes: d4b0d248cc057 ("nft: Reduce indenting level in flush_chain_cache()")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 4441b7da7995ed87741164ef39e99f1065eb9637)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 25e538b7e35d7..dafb879ebd6f0 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -793,27 +793,25 @@ static int __flush_chain_cache(struct nftnl_chain *c, void *data)
+ 
+ static void flush_chain_cache(struct nft_handle *h, const char *tablename)
+ {
++	const struct builtin_table *table;
+ 	int i;
+ 
++	if (tablename) {
++		table = nft_table_builtin_find(h, tablename);
++		if (!table || !h->table[table->type].chain_cache)
++			return;
++		nftnl_chain_list_foreach(h->table[table->type].chain_cache,
++					 __flush_chain_cache, NULL);
++		return;
++	}
++
+ 	for (i = 0; i < NFT_TABLE_MAX; i++) {
+ 		if (h->tables[i].name == NULL)
+ 			continue;
+ 
+-		if (tablename && strcmp(h->tables[i].name, tablename))
++		if (!h->table[i].chain_cache)
+ 			continue;
+ 
+-		if (!h->table[i].chain_cache) {
+-			if (tablename)
+-				return;
+-			continue;
+-		}
+-
+-		if (tablename) {
+-			nftnl_chain_list_foreach(h->table[i].chain_cache,
+-						 __flush_chain_cache, NULL);
+-			return;
+-		}
+-
+ 		nftnl_chain_list_free(h->table[i].chain_cache);
+ 		h->table[i].chain_cache = NULL;
+ 	}
+-- 
+2.20.1
+

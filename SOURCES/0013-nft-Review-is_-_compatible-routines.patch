@@ -1,0 +1,233 @@
+From 0318e0d123ebecbc98305284832774647d953859 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 20 Dec 2018 16:09:05 +0100
+Subject: [PATCH] nft: Review is_*_compatible() routines
+
+- Call to nft_table_builtin_find() in nft_is_table_compatible() is not
+  needed, as it is repeated in the latter call to nft_chain_list_get()
+  by nft_are_chains_compatible().
+
+- Turn nft_is_chain_compatible(), nft_is_rule_compatible() and
+  nft_is_expr_compatible() into callbacks for use with respective
+  foreach functions.
+
+- nft_are_chains_compatible() is not needed anymore due to foreach
+  function use.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit e774b15299c271a4c7570899591cf1b7960477ea)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 153 ++++++++++++++++++-------------------------------
+ 1 file changed, 55 insertions(+), 98 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 1fca1f17147f6..5032c718b33a9 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -3115,7 +3115,7 @@ static const char *supported_exprs[NFT_COMPAT_EXPR_MAX] = {
+ };
+ 
+ 
+-static int nft_is_expr_compatible(const struct nftnl_expr *expr)
++static int nft_is_expr_compatible(struct nftnl_expr *expr, void *data)
+ {
+ 	const char *name = nftnl_expr_get_str(expr, NFTNL_EXPR_NAME);
+ 	int i;
+@@ -3130,138 +3130,95 @@ static int nft_is_expr_compatible(const struct nftnl_expr *expr)
+ 	    nftnl_expr_get_u32(expr, NFTNL_EXPR_LIMIT_FLAGS) == 0)
+ 		return 0;
+ 
+-	return 1;
++	return -1;
+ }
+ 
+-static bool nft_is_rule_compatible(struct nftnl_rule *rule)
+-{
+-	struct nftnl_expr_iter *iter;
+-	struct nftnl_expr *expr;
+-	bool compatible = false;
+-
+-	iter = nftnl_expr_iter_create(rule);
+-	if (iter == NULL)
+-		return false;
++struct nft_is_rule_compatible_data {
++	const char *tablename;
++};
+ 
+-	expr = nftnl_expr_iter_next(iter);
+-	while (expr != NULL) {
+-		if (nft_is_expr_compatible(expr) == 0) {
+-			expr = nftnl_expr_iter_next(iter);
+-			continue;
+-		}
++static int nft_is_rule_compatible(struct nftnl_rule *rule, void *data)
++{
++	const char *table = nftnl_rule_get_str(rule, NFTNL_RULE_TABLE);
++	struct nft_is_rule_compatible_data *d = data;
+ 
+-		compatible = true;
+-		break;
+-	}
++	/* ignore rules belonging to a different table */
++	if (strcmp(table, d->tablename))
++		return 0;
+ 
+-	nftnl_expr_iter_destroy(iter);
+-	return compatible;
++	return nftnl_expr_foreach(rule, nft_is_expr_compatible, NULL);
+ }
+ 
+-static int nft_is_chain_compatible(const struct nft_handle *h,
+-				   const struct nftnl_chain *chain)
++static int nft_is_chain_compatible(struct nftnl_chain *c, void *data)
+ {
+-	const char *table, *name, *type, *cur_table;
+-	const struct builtin_chain *chains;
+-	int i, j, prio;
++	const struct builtin_chain *chains = NULL, *chain = NULL;
++	const char *table, *name, *type;
++	struct nft_handle *h = data;
+ 	enum nf_inet_hooks hook;
++	int i, prio;
+ 
+-	table = nftnl_chain_get(chain, NFTNL_CHAIN_TABLE);
+-	name = nftnl_chain_get(chain, NFTNL_CHAIN_NAME);
+-	type = nftnl_chain_get(chain, NFTNL_CHAIN_TYPE);
+-	prio = nftnl_chain_get_u32(chain, NFTNL_CHAIN_PRIO);
+-	hook = nftnl_chain_get_u32(chain, NFTNL_CHAIN_HOOKNUM);
++	if (!nft_chain_builtin(c))
++		return 0;
+ 
++	/* find chain's table in builtin tables */
++	table = nftnl_chain_get_str(c, NFTNL_CHAIN_TABLE);
+ 	for (i = 0; i < NFT_TABLE_MAX; i++) {
+-		cur_table = h->tables[i].name;
+-		chains = h->tables[i].chains;
++		const char *cur_table = h->tables[i].name;
+ 
+-		if (!cur_table || strcmp(table, cur_table) != 0)
++		if (!cur_table || strcmp(cur_table, table))
+ 			continue;
+ 
+-		for (j = 0; j < NF_INET_NUMHOOKS && chains[j].name; j++) {
+-			if (strcmp(name, chains[j].name) != 0)
+-				continue;
+-
+-			if (strcmp(type, chains[j].type) == 0 &&
+-			    prio == chains[j].prio &&
+-			    hook == chains[j].hook)
+-				return 0;
+-			break;
+-		}
++		chains = h->tables[i].chains;
++		break;
+ 	}
+-
+-	return 1;
+-}
+-
+-static int nft_are_chains_compatible(struct nft_handle *h, const char *tablename)
+-{
+-	struct nftnl_chain_list *list;
+-	struct nftnl_chain_list_iter *iter;
+-	struct nftnl_chain *chain;
+-	int ret = 0;
+-
+-	list = nft_chain_list_get(h, tablename);
+-	if (list == NULL)
+-		return -1;
+-
+-	iter = nftnl_chain_list_iter_create(list);
+-	if (iter == NULL)
++	if (!chains)
+ 		return -1;
+ 
+-	chain = nftnl_chain_list_iter_next(iter);
+-	while (chain != NULL) {
+-		if (!nft_chain_builtin(chain))
+-			goto next;
++	/* find chain in builtin chain list */
++	name = nftnl_chain_get_str(c, NFTNL_CHAIN_NAME);
++	for (i = 0; i < NF_INET_NUMHOOKS && chains[i].name; i++) {
++		if (strcmp(name, chains[i].name))
++			continue;
+ 
+-		ret = nft_is_chain_compatible(h, chain);
+-		if (ret != 0)
+-			break;
+-next:
+-		chain = nftnl_chain_list_iter_next(iter);
++		chain = &chains[i];
++		break;
+ 	}
++	if (!chain)
++		return -1;
+ 
+-	nftnl_chain_list_iter_destroy(iter);
++	/* compare properties */
++	type = nftnl_chain_get_str(c, NFTNL_CHAIN_TYPE);
++	prio = nftnl_chain_get_u32(c, NFTNL_CHAIN_PRIO);
++	hook = nftnl_chain_get_u32(c, NFTNL_CHAIN_HOOKNUM);
++	if (strcmp(type, chain->type) ||
++	    prio != chain->prio ||
++	    hook != chain->hook)
++		return -1;
+ 
+-	return ret;
++	return 0;
+ }
+ 
+ bool nft_is_table_compatible(struct nft_handle *h, const char *tablename)
+ {
++	struct nft_is_rule_compatible_data rcd = {
++		.tablename = tablename
++	};
++	struct nftnl_chain_list *clist;
+ 	struct nftnl_rule_list *list;
+-	struct nftnl_rule_list_iter *iter;
+-	struct nftnl_rule *rule;
+-	int ret = 0;
+ 
+-	if (!nft_table_builtin_find(h, tablename))
++	clist = nft_chain_list_get(h, tablename);
++	if (clist == NULL)
+ 		return false;
+ 
+-	ret = nft_are_chains_compatible(h, tablename);
+-	if (ret != 0)
++	if (nftnl_chain_list_foreach(clist, nft_is_chain_compatible, h))
+ 		return false;
+ 
+ 	list = nft_rule_list_get(h);
+ 	if (list == NULL)
+ 		return true;
+ 
+-	iter = nftnl_rule_list_iter_create(list);
+-	if (iter == NULL)
+-		return true;
+-
+-	rule = nftnl_rule_list_iter_next(iter);
+-	while (rule != NULL) {
+-		const char *table = nftnl_rule_get_str(rule, NFTNL_RULE_TABLE);
+-
+-		if (strcmp(table, tablename))
+-			goto next_rule;
+-
+-		ret = nft_is_rule_compatible(rule);
+-		if (ret != 0)
+-			break;
+-next_rule:
+-		rule = nftnl_rule_list_iter_next(iter);
+-	}
++	if (nftnl_rule_list_foreach(list, nft_is_rule_compatible, &rcd))
++		return false;
+ 
+-	nftnl_rule_list_iter_destroy(iter);
+-	return ret == 0;
++	return true;
+ }
+-- 
+2.20.1
+

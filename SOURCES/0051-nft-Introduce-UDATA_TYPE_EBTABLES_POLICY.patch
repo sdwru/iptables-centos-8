@@ -1,0 +1,41 @@
+From 0af602be4dbda5bf510815d3e448d91098da594e Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 7 Feb 2019 22:08:54 +0100
+Subject: [PATCH] nft: Introduce UDATA_TYPE_EBTABLES_POLICY
+
+This will be used later to identify ebtables user-defined chain policy
+rules.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Acked-by: Pablo Neira Ayuso <pablo@netfilter.org>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit b06cc4e0f67f4beba7560fc329d20f108c87b5fb)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 2fa973cf03975..6129afdbad281 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -1115,6 +1115,7 @@ int add_counters(struct nftnl_rule *r, uint64_t packets, uint64_t bytes)
+ 
+ enum udata_type {
+ 	UDATA_TYPE_COMMENT,
++	UDATA_TYPE_EBTABLES_POLICY,
+ 	__UDATA_TYPE_MAX,
+ };
+ #define UDATA_TYPE_MAX (__UDATA_TYPE_MAX - 1)
+@@ -1131,6 +1132,8 @@ static int parse_udata_cb(const struct nftnl_udata *attr, void *data)
+ 		if (value[len - 1] != '\0')
+ 			return -1;
+ 		break;
++	case UDATA_TYPE_EBTABLES_POLICY:
++		break;
+ 	default:
+ 		return 0;
+ 	}
+-- 
+2.20.1
+

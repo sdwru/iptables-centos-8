@@ -1,0 +1,155 @@
+From c30599e8d9465da351cf2bc96b67574a6b1ae72b Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 31 Jan 2019 16:12:51 +0100
+Subject: [PATCH] arptables-nft: Fix MARK target parsing and printing
+
+Legacy arptables parses mark values in hex no matter if prefixed with
+'0x' or not. Sadly, this is not easily achievable with guided option
+parser. Hence fall back to the old 'parse' callback. The introduced
+target definition is valid only for revision 2, but that's consistent
+with legacy arptables.
+
+When printing, use --set-mark option instead of --set-xmark.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit f7fa88020f3bc4ec646ce2a48731a1f5fa2aa0a9)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libxt_MARK.c                       | 95 +++++++++++++++++++
+ .../arptables/0001-arptables-save-restore_0   |  2 +-
+ 2 files changed, 96 insertions(+), 1 deletion(-)
+
+diff --git a/extensions/libxt_MARK.c b/extensions/libxt_MARK.c
+index 43aa977924b12..b765af6c35304 100644
+--- a/extensions/libxt_MARK.c
++++ b/extensions/libxt_MARK.c
+@@ -1,3 +1,4 @@
++#include <getopt.h>
+ #include <stdbool.h>
+ #include <stdio.h>
+ #include <xtables.h>
+@@ -245,6 +246,87 @@ static void mark_tg_save(const void *ip, const struct xt_entry_target *target)
+ 	printf(" --set-xmark 0x%x/0x%x", info->mark, info->mask);
+ }
+ 
++static void mark_tg_arp_save(const void *ip, const struct xt_entry_target *target)
++{
++	const struct xt_mark_tginfo2 *info = (const void *)target->data;
++
++	if (info->mark == 0)
++		printf(" --and-mark %x", (unsigned int)(uint32_t)~info->mask);
++	else if (info->mark == info->mask)
++		printf(" --or-mark %x", info->mark);
++	else
++		printf(" --set-mark %x", info->mark);
++}
++
++static void mark_tg_arp_print(const void *ip,
++			      const struct xt_entry_target *target, int numeric)
++{
++	mark_tg_arp_save(ip, target);
++}
++
++#define MARK_OPT 1
++#define AND_MARK_OPT 2
++#define OR_MARK_OPT 3
++
++static struct option mark_tg_arp_opts[] = {
++	{ .name = "set-mark", .has_arg = required_argument, .flag = 0, .val = MARK_OPT },
++	{ .name = "and-mark", .has_arg = required_argument, .flag = 0, .val = AND_MARK_OPT },
++	{ .name = "or-mark", .has_arg = required_argument, .flag = 0, .val =  OR_MARK_OPT },
++	{ .name = NULL}
++};
++
++static int
++mark_tg_arp_parse(int c, char **argv, int invert, unsigned int *flags,
++		  const void *entry, struct xt_entry_target **target)
++{
++	struct xt_mark_tginfo2 *info =
++		(struct xt_mark_tginfo2 *)(*target)->data;
++	int i;
++
++	switch (c) {
++	case MARK_OPT:
++		if (sscanf(argv[optind-1], "%x", &i) != 1) {
++			xtables_error(PARAMETER_PROBLEM,
++				"Bad mark value `%s'", optarg);
++			return 0;
++		}
++		info->mark = i;
++		if (*flags)
++			xtables_error(PARAMETER_PROBLEM,
++				"MARK: Can't specify --set-mark twice");
++		*flags = 1;
++		break;
++	case AND_MARK_OPT:
++		if (sscanf(argv[optind-1], "%x", &i) != 1) {
++			xtables_error(PARAMETER_PROBLEM,
++				"Bad mark value `%s'", optarg);
++			return 0;
++		}
++		info->mark = 0;
++		info->mask = ~i;
++		if (*flags)
++			xtables_error(PARAMETER_PROBLEM,
++				"MARK: Can't specify --and-mark twice");
++		*flags = 1;
++		break;
++	case OR_MARK_OPT:
++		if (sscanf(argv[optind-1], "%x", &i) != 1) {
++			xtables_error(PARAMETER_PROBLEM,
++				"Bad mark value `%s'", optarg);
++			return 0;
++		}
++		info->mark = info->mask = i;
++		if (*flags)
++			xtables_error(PARAMETER_PROBLEM,
++				"MARK: Can't specify --or-mark twice");
++		*flags = 1;
++		break;
++	default:
++		return 0;
++	}
++	return 1;
++}
++
+ static int mark_tg_xlate(struct xt_xlate *xl,
+ 			 const struct xt_xlate_tg_params *params)
+ {
+@@ -335,6 +417,19 @@ static struct xtables_target mark_tg_reg[] = {
+ 		.x6_options    = mark_tg_opts,
+ 		.xlate	       = mark_tg_xlate,
+ 	},
++	{
++		.version       = XTABLES_VERSION,
++		.name          = "MARK",
++		.revision      = 2,
++		.family        = NFPROTO_ARP,
++		.size          = XT_ALIGN(sizeof(struct xt_mark_tginfo2)),
++		.userspacesize = XT_ALIGN(sizeof(struct xt_mark_tginfo2)),
++		.help          = mark_tg_help,
++		.print         = mark_tg_arp_print,
++		.save          = mark_tg_arp_save,
++		.parse         = mark_tg_arp_parse,
++		.extra_opts    = mark_tg_arp_opts,
++	},
+ };
+ 
+ void _init(void)
+diff --git a/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0 b/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
+index 73b3b0cf88e18..f8629551b0ba9 100755
+--- a/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
++++ b/iptables/tests/shell/testcases/arptables/0001-arptables-save-restore_0
+@@ -47,7 +47,7 @@ DUMP='*filter
+ -A OUTPUT -o eth432 --h-length 6 --opcode 1 --h-type 1 -j CLASSIFY --set-class feed:babe
+ -A foo -i lo --h-length 6 --h-type 1 -j ACCEPT
+ -A foo --h-length 6 --h-type 1 -j ACCEPT
+--A foo --h-length 6 --h-type 1 -j MARK --set-xmark 0x3039/0xffffffff
++-A foo --h-length 6 --h-type 1 -j MARK --set-mark 12345
+ -A foo --h-length 6 --opcode 1 --h-type 1 -j ACCEPT
+ -A foo --h-length 6 --h-type 1 --proto-type 0x800 -j ACCEPT
+ -A foo -i lo --h-length 6 --opcode 1 --h-type 1 --proto-type 0x800 -j ACCEPT
+-- 
+2.20.1
+
