@@ -1,0 +1,43 @@
+From 6857a112296dee96966212a88bf671bd76467d95 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <psutter@redhat.com>
+Date: Mon, 24 Feb 2020 16:14:16 +0100
+Subject: [PATCH] xtables-monitor: Fix segfault when tracing
+
+This is a minimal fix extracted from upstream commit d0446ab11182f
+("xtables: Review nft_init()") which was deemed too untrusive for late
+inclusion into RHEL8.2.
+
+(cherry picked from commit e6445667fd0f141ca301aeabeee312545dbf014a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/xtables-monitor.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/iptables/xtables-monitor.c b/iptables/xtables-monitor.c
+index a5245d1422af9..737c35f2ac60c 100644
+--- a/iptables/xtables-monitor.c
++++ b/iptables/xtables-monitor.c
+@@ -595,7 +595,9 @@ int xtables_monitor_main(int argc, char *argv[])
+ 	struct mnl_socket *nl;
+ 	char buf[MNL_SOCKET_BUFFER_SIZE];
+ 	uint32_t nfgroup = 0;
+-	struct nft_handle h = {};
++	struct nft_handle h = {
++		.family = AF_INET,
++	};
+ 	struct cb_arg cb_arg = {
+ 		.h = &h,
+ 	};
+@@ -622,6 +624,9 @@ int xtables_monitor_main(int argc, char *argv[])
+ 			strerror(errno));
+ 		exit(EXIT_FAILURE);
+ 	}
++	h.ops = nft_family_ops_lookup(h.family);
++	if (!h.ops)
++		xtables_error(PARAMETER_PROBLEM, "Unknown family");
+ 
+ 	opterr = 0;
+ 	while ((c = getopt_long(argc, argv, "ceht46V", options, NULL)) != -1) {
+-- 
+2.25.1
+
