@@ -7,7 +7,7 @@
 Name: iptables
 Summary: Tools for managing Linux kernel packet filtering capabilities
 Version: 1.8.2
-Release: 16%{?dist}
+Release: 1699%{?dist}.0+custom1+1
 Source: http://www.netfilter.org/projects/iptables/files/%{name}-%{version}.tar.bz2
 Source1: iptables.init
 Source2: iptables-config
@@ -306,11 +306,11 @@ rm -f %{buildroot}%{_mandir}/man8/xtables-legacy*
 
 # rename nft versions to standard name
 pfx=%{buildroot}%{_sbindir}/iptables
-for pfx in %{buildroot}%{_sbindir}/{iptables,ip6tables,arptables,ebtables}; do
-	mv $pfx-nft $pfx
-	mv $pfx-nft-restore $pfx-restore
-	mv $pfx-nft-save $pfx-save
-done
+# for pfx in %{buildroot}%{_sbindir}/{iptables,ip6tables,arptables,ebtables}; do
+#	mv $pfx-nft $pfx
+#	mv $pfx-nft-restore $pfx-restore
+#	mv $pfx-nft-save $pfx-save
+# done
 
 # extra sources for arptables
 install -p -D -m 644 %{SOURCE6} %{buildroot}%{_unitdir}/arptables.service
@@ -380,24 +380,41 @@ done
 %if 0%{?fedora} <= 24
 %{_sysconfdir}/ethertypes
 %endif
+%{_bindir}/iptables-xml
+
 %{_sbindir}/iptables
 %{_sbindir}/iptables-apply
 %{_sbindir}/iptables-restore
 %{_sbindir}/iptables-restore-translate
 %{_sbindir}/iptables-save
 %{_sbindir}/iptables-translate
+%{_sbindir}/iptables-nft
+%{_sbindir}/iptables-nft-restore
+%{_sbindir}/iptables-nft-save
+%{_sbindir}/ip6tables-nft
+%{_sbindir}/ip6tables-nft-restore
+%{_sbindir}/ip6tables-nft-save
 %{_sbindir}/ip6tables
 %{_sbindir}/ip6tables-restore
 %{_sbindir}/ip6tables-restore-translate
 %{_sbindir}/ip6tables-save
 %{_sbindir}/ip6tables-translate
+%{_sbindir}/ip6tables-legacy
+%{_sbindir}/ip6tables-legacy-restore
+%{_sbindir}/ip6tables-legacy-save
+%{_sbindir}/iptables-legacy
+%{_sbindir}/iptables-legacy-restore
+%{_sbindir}/iptables-legacy-save
 %{_sbindir}/xtables-monitor
 %{_sbindir}/xtables-nft-multi
+%{_sbindir}/xtables-legacy-multi
+%{_mandir}/man1/iptables*
 %doc %{_mandir}/man8/iptables*
 %doc %{_mandir}/man8/ip6tables*
 %doc %{_mandir}/man8/xtables-monitor*
 %doc %{_mandir}/man8/xtables-nft*
 %doc %{_mandir}/man8/*tables-translate*
+%{_mandir}/man8/xtables-legacy*
 %doc %{_mandir}/man8/*tables-restore-translate*
 %dir %{_libdir}/xtables
 %{_libdir}/xtables/libarpt*
@@ -464,6 +481,9 @@ done
 %doc %{_mandir}/man8/ebtables.8*
 
 %changelog
+* Wed Jun 03 2020 root <root@localhost> - 1.8.2-1699.0
+- add legacy files
+
 * Thu Aug 08 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-16
 - nft: Set socket receive buffer
 
