@@ -338,7 +338,8 @@ static void nft_arp_parse_payload(struct nft_xt_ctx *ctx,
 	struct iptables_command_state *cs = data;
 	struct arpt_entry *fw = &cs->arp;
 	struct in_addr addr;
-	unsigned short int ar_hrd, ar_pro, ar_op, ar_hln;
+	uint16_t ar_hrd, ar_pro, ar_op;
+	uint8_t ar_hln;
 	bool inv;
 
 	switch (ctx->payload.offset) {
@@ -364,7 +365,7 @@ static void nft_arp_parse_payload(struct nft_xt_ctx *ctx,
 			fw->arp.invflags |= ARPT_INV_ARPOP;
 		break;
 	case offsetof(struct arphdr, ar_hln):
-		get_cmp_data(e, &ar_hln, sizeof(ar_op), &inv);
+		get_cmp_data(e, &ar_hln, sizeof(ar_hln), &inv);
 		fw->arp.arhln = ar_hln;
 		fw->arp.arhln_mask = 0xff;
 		if (inv)
@@ -617,7 +618,7 @@ nft_arp_print_rule(struct nftnl_rule *r, unsigned int num, unsigned int format)
 	print_matches_and_target(&cs, format);
 
 	if (!(format & FMT_NOCOUNTS)) {
-		printf(", pcnt=");
+		printf(" , pcnt=");
 		xtables_print_num(cs.counters.pcnt, format | FMT_NOTABLE);
 		printf("-- bcnt=");
 		xtables_print_num(cs.counters.bcnt, format | FMT_NOTABLE);

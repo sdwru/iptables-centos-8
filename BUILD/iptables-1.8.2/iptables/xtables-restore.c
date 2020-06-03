@@ -7,6 +7,7 @@
 
 #include <getopt.h>
 #include <errno.h>
+#include <libgen.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
@@ -51,7 +52,7 @@ static void print_usage(const char *name, const char *version)
 			"	   [ --help ]\n"
 			"	   [ --noflush ]\n"
 			"	   [ --table=<TABLE> ]\n"
-			"          [ --modprobe=<command> ]\n"
+			"	   [ --modprobe=<command> ]\n"
 			"	   [ --ipv4 ]\n"
 			"	   [ --ipv6 ]\n", name);
 }
@@ -376,8 +377,7 @@ xtables_restore_main(int family, const char *progname, int argc, char *argv[])
 				p.testing = 1;
 				break;
 			case 'h':
-				print_usage("xtables-restore",
-					    IPTABLES_VERSION);
+				print_usage(prog_name, IPTABLES_VERSION);
 				exit(0);
 			case 'n':
 				noflush = 1;
@@ -402,7 +402,8 @@ xtables_restore_main(int family, const char *progname, int argc, char *argv[])
 				break;
 			default:
 				fprintf(stderr,
-					"Try `xtables-restore -h' for more information.\n");
+					"Try `%s -h' for more information.\n",
+					prog_name);
 				exit(1);
 		}
 	}
@@ -458,13 +459,13 @@ xtables_restore_main(int family, const char *progname, int argc, char *argv[])
 
 int xtables_ip4_restore_main(int argc, char *argv[])
 {
-	return xtables_restore_main(NFPROTO_IPV4, "iptables-restore",
+	return xtables_restore_main(NFPROTO_IPV4, basename(*argv),
 				    argc, argv);
 }
 
 int xtables_ip6_restore_main(int argc, char *argv[])
 {
-	return xtables_restore_main(NFPROTO_IPV6, "ip6tables-restore",
+	return xtables_restore_main(NFPROTO_IPV6, basename(*argv),
 				    argc, argv);
 }
 

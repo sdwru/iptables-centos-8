@@ -170,8 +170,24 @@ static void mnl_set_sndbuffer(const struct mnl_socket *nl,
 	nlbuffsiz = newbuffsiz;
 }
 
+static int nlrcvbuffsiz;
+
+static void mnl_set_rcvbuffer(const struct mnl_socket *nl, int numcmds)
+{
+	int newbuffsiz = getpagesize() * numcmds;
+
+	if (newbuffsiz <= nlrcvbuffsiz)
+		return;
+
+	if (setsockopt(mnl_socket_get_fd(nl), SOL_SOCKET, SO_RCVBUFFORCE,
+		       &newbuffsiz, sizeof(socklen_t)) < 0)
+		return;
+
+	nlrcvbuffsiz = newbuffsiz;
+}
+
 static ssize_t mnl_nft_socket_sendmsg(const struct mnl_socket *nf_sock,
-				      struct nftnl_batch *batch)
+				      struct nftnl_batch *batch, int numcmds)
 {
 	static const struct sockaddr_nl snl = {
 		.nl_family = AF_NETLINK
@@ -186,13 +202,15 @@ static ssize_t mnl_nft_socket_sendmsg(const struct mnl_socket *nf_sock,
 	};
 
 	mnl_set_sndbuffer(nf_sock, batch);
+	mnl_set_rcvbuffer(nf_sock, numcmds);
 	nftnl_batch_iovec(batch, iov, iov_len);
 
 	return sendmsg(mnl_socket_get_fd(nf_sock), &msg, 0);
 }
 
 static int mnl_batch_talk(const struct mnl_socket *nf_sock,
-			  struct nftnl_batch *batch, struct list_head *err_list)
+			  struct nftnl_batch *batch, int numcmds,
+			  struct list_head *err_list)
 {
 	const struct mnl_socket *nl = nf_sock;
 	int ret, fd = mnl_socket_get_fd(nl), portid = mnl_socket_get_portid(nl);
@@ -204,7 +222,7 @@ static int mnl_batch_talk(const struct mnl_socket *nf_sock,
 	};
 	int err = 0;
 
-	ret = mnl_nft_socket_sendmsg(nf_sock, batch);
+	ret = mnl_nft_socket_sendmsg(nf_sock, batch, numcmds);
 	if (ret == -1)
 		return -1;
 
@@ -748,6 +766,7 @@ static int nft_restart(struct nft_handle *h)
 		return -1;
 
 	h->portid = mnl_socket_get_portid(h->nl);
+	nlrcvbuffsiz = 0;
 
 	return 0;
 }
@@ -2331,18 +2350,7 @@ __nft_rule_list(struct nft_handle *h, struct nftnl_chain *c,
 
 	r = nftnl_rule_iter_next(iter);
 	while (r != NULL) {
-		rule_ctr++;
-
-		if (rulenum > 0 && rule_ctr != rulenum) {
-			/* List by rule number case */
-			goto next;
-		}
-
-		cb(r, rule_ctr, format);
-		if (rulenum > 0)
-			break;
-
-next:
+		cb(r, ++rule_ctr, format);
 		r = nftnl_rule_iter_next(iter);
 	}
 
@@ -2739,7 +2747,7 @@ static int nft_action(struct nft_handle *h, int action)
 		break;
 	}
 
-	ret = mnl_batch_talk(h->nl, h->batch, &h->err_list);
+	ret = mnl_batch_talk(h->nl, h->batch, seq, &h->err_list);
 
 	i = 0;
 	buflen = sizeof(errmsg);
@@ -3218,7 +3226,9 @@ static int __nft_chain_zero_counters(struct nftnl_chain *c, void *data)
 			 * rule based on its handle only.
 			 */
 			nftnl_rule_unset(r, NFTNL_RULE_POSITION);
-			batch_rule_add(h, NFT_COMPAT_RULE_REPLACE, r);
+			ret = batch_rule_add(h, NFT_COMPAT_RULE_REPLACE, r);
+			if (ret)
+				return -1;
 		}
 		r = nftnl_rule_iter_next(iter);
 	}

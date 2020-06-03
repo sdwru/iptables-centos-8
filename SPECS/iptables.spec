@@ -7,7 +7,7 @@
 Name: iptables
 Summary: Tools for managing Linux kernel packet filtering capabilities
 Version: 1.8.2
-Release: 9%{?dist}.1
+Release: 16%{?dist}
 Source: http://www.netfilter.org/projects/iptables/files/%{name}-%{version}.tar.bz2
 Source1: iptables.init
 Source2: iptables-config
@@ -21,59 +21,78 @@ Source9: ebtables.service
 Source10: ebtables-config
 Source11: ebtables.8
 Source12: arptables.8
-Patch1: 0001-iptables-apply-Use-mktemp-instead-of-tempfile.patch
-Patch2: 0002-extensions-format-security-fixes-in-libip-6-t_icmp.patch
-Patch3: 0003-arptables-nft-use-generic-expression-parsing-functio.patch
-Patch4: 0004-xtables-Don-t-use-native-nftables-comments.patch
-Patch5: 0005-xtables-Introduce-per-table-chain-caches.patch
-Patch6: 0006-nft-add-type-field-to-builtin_table.patch
-Patch7: 0007-nft-move-chain_cache-back-to-struct-nft_handle.patch
-Patch8: 0008-nft-move-initialize-to-struct-nft_handle.patch
-Patch9: 0009-xtables-constify-struct-builtin_table-and-struct-bui.patch
-Patch10: 0010-nft-Simplify-nftnl_rule_list_chain_save.patch
-Patch11: 0011-nft-Review-unclear-return-points.patch
-Patch12: 0012-xtables-restore-Review-chain-handling.patch
-Patch13: 0013-nft-Review-is_-_compatible-routines.patch
-Patch14: 0014-nft-Reduce-__nft_rule_del-signature.patch
-Patch15: 0015-nft-Reduce-indenting-level-in-flush_chain_cache.patch
-Patch16: 0016-nft-Simplify-per-table-chain-cache-update.patch
-Patch17: 0017-nft-Simplify-nft_rule_insert-a-bit.patch
-Patch18: 0018-nft-Introduce-fetch_chain_cache.patch
-Patch19: 0019-nft-Move-nft_rule_list_get-above-nft_chain_list_get.patch
-Patch20: 0020-xtables-Implement-per-chain-rule-cache.patch
-Patch21: 0021-nft-Drop-nft_chain_list_find.patch
-Patch22: 0022-xtables-Optimize-flushing-a-specific-chain.patch
-Patch23: 0023-xtables-Optimize-nft_chain_zero_counters.patch
-Patch24: 0024-tests-Extend-verbose-output-and-return-code-tests.patch
-Patch25: 0025-xtables-Optimize-user-defined-chain-deletion.patch
-Patch26: 0026-xtables-Optimize-list-command-with-given-chain.patch
-Patch27: 0027-xtables-Optimize-list-rules-command-with-given-chain.patch
-Patch28: 0028-nft-Make-use-of-nftnl_rule_lookup_byindex.patch
-Patch29: 0029-nft-Simplify-nft_is_chain_compatible.patch
-Patch30: 0030-nft-Simplify-flush_chain_cache.patch
-Patch31: 0031-xtables-Set-errno-in-nft_rule_check-if-chain-not-fou.patch
-Patch32: 0032-xtables-Speed-up-chain-deletion-in-large-rulesets.patch
-Patch33: 0033-arptables-nft-Fix-listing-rules-without-target.patch
-Patch34: 0034-arptables-nft-Fix-MARK-target-parsing-and-printing.patch
-Patch35: 0035-arptables-nft-Fix-CLASSIFY-target-printing.patch
-Patch36: 0036-arptables-nft-Remove-space-between-cnt-and-value.patch
-Patch37: 0037-arptables-nft-save-Fix-position-of-j-option.patch
-Patch38: 0038-arptables-nft-Don-t-print-default-h-len-h-type-value.patch
-Patch39: 0039-tests-shell-Add-arptables-nft-verbose-output-test.patch
-Patch40: 0040-arptables-nft-Set-h-type-h-length-masks-by-default-t.patch
-Patch41: 0041-nft-Add-new-builtin-chains-to-cache-immediately.patch
-Patch42: 0042-xtables-Fix-position-of-replaced-rules-in-cache.patch
-Patch43: 0043-xtables-Fix-for-inserting-rule-at-wrong-position.patch
-Patch44: 0044-xtables-Fix-for-crash-when-comparing-rules-with-stan.patch
-Patch45: 0045-xtables-Fix-for-false-positive-rule-matching.patch
-Patch46: 0046-ebtables-Fix-rule-listing-with-counters.patch
-Patch47: 0047-Revert-ebtables-use-extrapositioned-negation-consist.patch
-Patch48: 0048-arptables-Support-set-counters-option.patch
-Patch49: 0049-xshared-Explicitly-pass-target-to-command_jump.patch
-Patch50: 0050-nft-Don-t-assume-NFTNL_RULE_USERDATA-holds-a-comment.patch
-Patch51: 0051-nft-Introduce-UDATA_TYPE_EBTABLES_POLICY.patch
-Patch52: 0052-ebtables-nft-Support-user-defined-chain-policies.patch
-Patch53: 0053-xtables-save-Fix-table-not-found-error-message.patch
+Patch1: 0001-Add-iptables-test.py-testsuite-from-v1.8.2.patch
+Patch2: 0002-iptables-apply-Use-mktemp-instead-of-tempfile.patch
+Patch3: 0003-extensions-format-security-fixes-in-libip-6-t_icmp.patch
+Patch4: 0004-arptables-nft-use-generic-expression-parsing-functio.patch
+Patch5: 0005-xtables-Don-t-use-native-nftables-comments.patch
+Patch6: 0006-xtables-Introduce-per-table-chain-caches.patch
+Patch7: 0007-nft-add-type-field-to-builtin_table.patch
+Patch8: 0008-nft-move-chain_cache-back-to-struct-nft_handle.patch
+Patch9: 0009-nft-move-initialize-to-struct-nft_handle.patch
+Patch10: 0010-xtables-constify-struct-builtin_table-and-struct-bui.patch
+Patch11: 0011-nft-Simplify-nftnl_rule_list_chain_save.patch
+Patch12: 0012-nft-Review-unclear-return-points.patch
+Patch13: 0013-xtables-restore-Review-chain-handling.patch
+Patch14: 0014-nft-Review-is_-_compatible-routines.patch
+Patch15: 0015-nft-Reduce-__nft_rule_del-signature.patch
+Patch16: 0016-nft-Reduce-indenting-level-in-flush_chain_cache.patch
+Patch17: 0017-nft-Simplify-per-table-chain-cache-update.patch
+Patch18: 0018-nft-Simplify-nft_rule_insert-a-bit.patch
+Patch19: 0019-nft-Introduce-fetch_chain_cache.patch
+Patch20: 0020-nft-Move-nft_rule_list_get-above-nft_chain_list_get.patch
+Patch21: 0021-xtables-Implement-per-chain-rule-cache.patch
+Patch22: 0022-nft-Drop-nft_chain_list_find.patch
+Patch23: 0023-xtables-Optimize-flushing-a-specific-chain.patch
+Patch24: 0024-xtables-Optimize-nft_chain_zero_counters.patch
+Patch25: 0025-tests-Extend-verbose-output-and-return-code-tests.patch
+Patch26: 0026-xtables-Optimize-user-defined-chain-deletion.patch
+Patch27: 0027-xtables-Optimize-list-command-with-given-chain.patch
+Patch28: 0028-xtables-Optimize-list-rules-command-with-given-chain.patch
+Patch29: 0029-nft-Make-use-of-nftnl_rule_lookup_byindex.patch
+Patch30: 0030-nft-Simplify-nft_is_chain_compatible.patch
+Patch31: 0031-nft-Simplify-flush_chain_cache.patch
+Patch32: 0032-xtables-Set-errno-in-nft_rule_check-if-chain-not-fou.patch
+Patch33: 0033-xtables-Speed-up-chain-deletion-in-large-rulesets.patch
+Patch34: 0034-arptables-nft-Fix-listing-rules-without-target.patch
+Patch35: 0035-arptables-nft-Fix-MARK-target-parsing-and-printing.patch
+Patch36: 0036-arptables-nft-Fix-CLASSIFY-target-printing.patch
+Patch37: 0037-arptables-nft-Remove-space-between-cnt-and-value.patch
+Patch38: 0038-arptables-nft-save-Fix-position-of-j-option.patch
+Patch39: 0039-arptables-nft-Don-t-print-default-h-len-h-type-value.patch
+Patch40: 0040-tests-shell-Add-arptables-nft-verbose-output-test.patch
+Patch41: 0041-arptables-nft-Set-h-type-h-length-masks-by-default-t.patch
+Patch42: 0042-nft-Add-new-builtin-chains-to-cache-immediately.patch
+Patch43: 0043-xtables-Fix-position-of-replaced-rules-in-cache.patch
+Patch44: 0044-xtables-Fix-for-inserting-rule-at-wrong-position.patch
+Patch45: 0045-xtables-Fix-for-crash-when-comparing-rules-with-stan.patch
+Patch46: 0046-xtables-Fix-for-false-positive-rule-matching.patch
+Patch47: 0047-ebtables-Fix-rule-listing-with-counters.patch
+Patch48: 0048-Revert-ebtables-use-extrapositioned-negation-consist.patch
+Patch49: 0049-arptables-Support-set-counters-option.patch
+Patch50: 0050-xshared-Explicitly-pass-target-to-command_jump.patch
+Patch51: 0051-nft-Don-t-assume-NFTNL_RULE_USERDATA-holds-a-comment.patch
+Patch52: 0052-nft-Introduce-UDATA_TYPE_EBTABLES_POLICY.patch
+Patch53: 0053-ebtables-nft-Support-user-defined-chain-policies.patch
+Patch54: 0054-extensions-libipt_realm-Document-allowed-realm-value.patch
+Patch55: 0055-extensions-TRACE-Point-at-xtables-monitor-in-documen.patch
+Patch56: 0056-xtables-Catch-errors-when-zeroing-rule-rounters.patch
+Patch57: 0057-xtables-save-Fix-table-not-found-error-message.patch
+Patch58: 0058-arptables-nft-fix-decoding-of-hlen-on-bigendian-plat.patch
+Patch59: 0059-extensions-libip6t_mh-fix-bogus-translation-error.patch
+Patch60: 0060-xtables-save-Point-at-existing-man-page-in-help-text.patch
+Patch61: 0061-xtables-restore-Fix-program-names-in-help-texts.patch
+Patch62: 0062-extensions-AUDIT-Document-ineffective-type-option.patch
+Patch63: 0063-utils-Add-a-manpage-for-nfbpf_compile.patch
+Patch64: 0064-doc-Install-ip-6-tables-translate.8-manpages.patch
+Patch65: 0065-nft-Eliminate-dead-code-in-__nft_rule_list.patch
+Patch66: 0066-arptables-Print-space-before-comma-and-counters.patch
+Patch67: 0067-extensions-Fix-ipvs-vproto-parsing.patch
+Patch68: 0068-extensions-Fix-ipvs-vproto-option-printing.patch
+Patch69: 0069-extensions-Add-testcase-for-libxt_ipvs.patch
+Patch70: 0070-doc-Install-ip-6-tables-restore-translate.8-man-page.patch
+Patch71: 0071-nft-Set-socket-receive-buffer.patch
+
 URL: http://www.netfilter.org/
 # pf.os: ISC license
 # iptables-apply: Artistic Licence 2.0
@@ -216,7 +235,7 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 rm -f include/linux/types.h
 
-make %{?_smp_mflags}
+make %{?_smp_mflags} V=1
 
 %install
 make install DESTDIR=%{buildroot} 
@@ -374,12 +393,12 @@ done
 %{_sbindir}/ip6tables-translate
 %{_sbindir}/xtables-monitor
 %{_sbindir}/xtables-nft-multi
-%{_mandir}/man8/iptables*
-%{_mandir}/man8/ip6tables*
-%{_mandir}/man8/nfnl_osf*
-%{_mandir}/man8/xtables-monitor*
-%{_mandir}/man8/xtables-nft*
-%{_mandir}/man8/xtables-translate*
+%doc %{_mandir}/man8/iptables*
+%doc %{_mandir}/man8/ip6tables*
+%doc %{_mandir}/man8/xtables-monitor*
+%doc %{_mandir}/man8/xtables-nft*
+%doc %{_mandir}/man8/*tables-translate*
+%doc %{_mandir}/man8/*tables-restore-translate*
 %dir %{_libdir}/xtables
 %{_libdir}/xtables/libarpt*
 %{_libdir}/xtables/libebt*
@@ -426,6 +445,8 @@ done
 %{_sbindir}/nfbpf_compile
 %dir %{_datadir}/xtables
 %{_datadir}/xtables/pf.os
+%doc %{_mandir}/man8/nfnl_osf*
+%doc %{_mandir}/man8/nfbpf_compile*
 
 %files arptables
 %{_sbindir}/arptables*
@@ -443,8 +464,40 @@ done
 %doc %{_mandir}/man8/ebtables.8*
 
 %changelog
-* Tue Jun 04 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-9.1
+* Thu Aug 08 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-16
+- nft: Set socket receive buffer
+
+* Wed Jul 31 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-15
+- doc: Install ip{6,}tables-restore-translate.8 man pages
+
+* Tue Jul 02 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-14
+- arptables: Print space before comma and counters
+- extensions: Fix ipvs vproto parsing
+- extensions: Fix ipvs vproto option printing
+- extensions: Add testcase for libxt_ipvs
+
+* Mon Jul 01 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-13
+- doc: Install ip{6,}tables-translate.8 manpages
+- nft: Eliminate dead code in __nft_rule_list
+
+* Wed Jun 12 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-12
+- Add iptables-test.py testsuite to sources
+- extensions: libip6t_mh: fix bogus translation error
+- extensions: AUDIT: Document ineffective --type option
+- xtables-restore: Fix program names in help texts
+- xtables-save: Point at existing man page in help text
+- utils: Add a manpage for nfbpf_compile
+- Mark man pages in base package as documentation files
+
+* Thu May 23 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-11
+- Enable verbose output when building
+
+* Thu May 09 2019 Phil Sutter <psutter@redhat.com> - 1.8.2-10
+- arptables-nft: fix decoding of hlen on bigendian platforms
 - xtables-save: Fix table not found error message
+- xtables: Catch errors when zeroing rule rounters
+- extensions: TRACE: Point at xtables-monitor in documentation
+- extensions: libipt_realm: Document allowed realm values
 
 * Fri Feb 08 2019 Phil Sutter - 1.8.2-9
 - ebtables-nft: Support user-defined chain policies
