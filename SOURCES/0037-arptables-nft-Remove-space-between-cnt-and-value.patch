@@ -1,0 +1,35 @@
+From 44e633b17e257f1915c4b33d9249f2e45f0a39cc Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 31 Jan 2019 16:12:53 +0100
+Subject: [PATCH] arptables-nft: Remove space between *cnt= and value
+
+When printing rule counters, call xtables_print_num() with FMT_NOTABLE
+bit set to avoid spaces between equal sign and value.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 9421327926a529ec8300d37f3be8a6cfab701786)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-arp.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/iptables/nft-arp.c b/iptables/nft-arp.c
+index 56021223bdbe6..f357fc4a43c4c 100644
+--- a/iptables/nft-arp.c
++++ b/iptables/nft-arp.c
+@@ -605,9 +605,9 @@ nft_arp_print_rule(struct nftnl_rule *r, unsigned int num, unsigned int format)
+ 
+ 	if (!(format & FMT_NOCOUNTS)) {
+ 		printf(", pcnt=");
+-		xtables_print_num(cs.counters.pcnt, format);
++		xtables_print_num(cs.counters.pcnt, format | FMT_NOTABLE);
+ 		printf("-- bcnt=");
+-		xtables_print_num(cs.counters.bcnt, format);
++		xtables_print_num(cs.counters.bcnt, format | FMT_NOTABLE);
+ 	}
+ 
+ 	if (!(format & FMT_NONEWLINE))
+-- 
+2.21.0
+

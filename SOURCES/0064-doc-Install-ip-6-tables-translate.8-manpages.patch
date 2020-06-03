@@ -1,0 +1,64 @@
+From 81f4451d47db33e803fb5a339f898e8911b55df6 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Wed, 20 Feb 2019 14:02:55 +0100
+Subject: [PATCH] doc: Install ip{6,}tables-translate.8 manpages
+
+These are just semantic links to xtables-translate.8.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit b738ca36777851e8f08c20a1e6c5c6492e934b38)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/.gitignore  | 2 ++
+ iptables/Makefile.am | 5 +++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/iptables/.gitignore b/iptables/.gitignore
+index d0301c6de896e..c638139b8a1d0 100644
+--- a/iptables/.gitignore
++++ b/iptables/.gitignore
+@@ -2,6 +2,7 @@
+ /ip6tables-save
+ /ip6tables-restore
+ /ip6tables-static
++/ip6tables-translate.8
+ /iptables
+ /iptables.8
+ /iptables-extensions.8
+@@ -11,6 +12,7 @@
+ /iptables-restore
+ /iptables-restore.8
+ /iptables-static
++/iptables-translate.8
+ /iptables-xml
+ /iptables-xml.1
+ /xtables-multi
+diff --git a/iptables/Makefile.am b/iptables/Makefile.am
+index 581dc32ba846b..8e902ef369b8e 100644
+--- a/iptables/Makefile.am
++++ b/iptables/Makefile.am
+@@ -62,8 +62,10 @@ man_MANS         = iptables.8 iptables-restore.8 iptables-save.8 \
+                    iptables-xml.1 ip6tables.8 ip6tables-restore.8 \
+                    ip6tables-save.8 iptables-extensions.8 \
+                    xtables-nft.8 xtables-translate.8 xtables-legacy.8 \
++                   iptables-translate.8 ip6tables-translate.8 \
+                    xtables-monitor.8
+ CLEANFILES       = iptables.8 xtables-monitor.8 \
++		   iptables-translate.8 ip6tables-translate.8 \
+ 		   xtables-config-parser.c xtables-config-syntax.c
+ 
+ vx_bin_links   = iptables-xml
+@@ -94,6 +96,9 @@ iptables-extensions.8: iptables-extensions.8.tmpl ../extensions/matches.man ../e
+ 		-e '/@MATCH@/ r ../extensions/matches.man' \
+ 		-e '/@TARGET@/ r ../extensions/targets.man' $< >$@;
+ 
++iptables-translate.8 ip6tables-translate.8:
++	${AM_VERBOSE_GEN} echo '.so man8/xtables-translate.8' >$@
++
+ pkgconfig_DATA = xtables.pc
+ 
+ # Using if..fi avoids an ugly "error (ignored)" message :)
+-- 
+2.21.0
+

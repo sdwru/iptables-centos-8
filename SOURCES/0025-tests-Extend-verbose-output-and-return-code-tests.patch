@@ -1,0 +1,79 @@
+From 9cc2fc0be5adc8f828fc8fd62951f7773148b7f0 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 20 Dec 2018 16:09:16 +0100
+Subject: [PATCH] tests: Extend verbose output and return code tests
+
+Recent changes to chain flush and zero routines incorporate proper error
+propagation so trying to flush or zero a non-existent chain results in
+an error. This is consistent with iptables-legacy, extend tests to make
+sure it stays this way.
+
+Also extend verbose output test to make these recent changes didn't mess
+it up.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit e80f7fe56e4c64e05da426418bc2fae7ca221c49)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ .../shell/testcases/iptables/0002-verbose-output_0  | 13 +++++++++----
+ .../shell/testcases/iptables/0004-return-codes_0    |  6 ++++++
+ 2 files changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/iptables/tests/shell/testcases/iptables/0002-verbose-output_0 b/iptables/tests/shell/testcases/iptables/0002-verbose-output_0
+index 2e8059536ea7b..b1ef91f61f481 100755
+--- a/iptables/tests/shell/testcases/iptables/0002-verbose-output_0
++++ b/iptables/tests/shell/testcases/iptables/0002-verbose-output_0
+@@ -29,23 +29,28 @@ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ 
+ diff -u -Z <(echo -e "$EXPECT") <($XT_MULTI iptables -v -n -L)
+ 
++[[ -z $($XT_MULTI iptables -v -N foobar) ]] || exit 1
++
+ diff -u -Z <(echo -e "$VOUT1") <($XT_MULTI iptables -v -D FORWARD $RULE1)
+ diff -u -Z <(echo -e "$VOUT2") <($XT_MULTI iptables -v -D FORWARD $RULE2)
+ 
+ EXPECT="Flushing chain \`INPUT'
+ Flushing chain \`FORWARD'
+-Flushing chain \`OUTPUT'"
++Flushing chain \`OUTPUT'
++Flushing chain \`foobar'"
+ 
+ diff -u <(echo -e "$EXPECT") <($XT_MULTI iptables -v -F)
+ 
+ EXPECT="Zeroing chain \`INPUT'
+ Zeroing chain \`FORWARD'
+-Zeroing chain \`OUTPUT'"
++Zeroing chain \`OUTPUT'
++Zeroing chain \`foobar'"
+ 
+ diff -u <(echo -e "$EXPECT") <($XT_MULTI iptables -v -Z)
+ 
+ diff -u <(echo "Flushing chain \`OUTPUT'") <($XT_MULTI iptables -v -F OUTPUT)
+ diff -u <(echo "Zeroing chain \`OUTPUT'") <($XT_MULTI iptables -v -Z OUTPUT)
++diff -u <(echo "Flushing chain \`foobar'") <($XT_MULTI iptables -v -F foobar)
++diff -u <(echo "Zeroing chain \`foobar'") <($XT_MULTI iptables -v -Z foobar)
+ 
+-$XT_MULTI iptables -N foo
+-diff -u <(echo "Deleting chain \`foo'") <($XT_MULTI iptables -v -X foo)
++diff -u <(echo "Deleting chain \`foobar'") <($XT_MULTI iptables -v -X foobar)
+diff --git a/iptables/tests/shell/testcases/iptables/0004-return-codes_0 b/iptables/tests/shell/testcases/iptables/0004-return-codes_0
+index 5b6e1f6f1bc7a..9d2493992bd69 100755
+--- a/iptables/tests/shell/testcases/iptables/0004-return-codes_0
++++ b/iptables/tests/shell/testcases/iptables/0004-return-codes_0
+@@ -23,6 +23,12 @@ cmd 1 iptables -N foo
+ # iptables-nft allows this - bug or feature?
+ #cmd 2 iptables -N "invalid name"
+ 
++# test chain flushing/zeroing
++cmd 0 iptables -F foo
++cmd 0 iptables -Z foo
++cmd 1 iptables -F bar
++cmd 1 iptables -Z bar
++
+ # test chain rename
+ cmd 0 iptables -E foo bar
+ cmd 1 iptables -E foo bar
+-- 
+2.21.0
+

@@ -1,0 +1,140 @@
+From b3d9e7d73221e1f7efe9bd7052e85163e5de65aa Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Wed, 16 Jan 2019 22:47:59 +0100
+Subject: [PATCH] utils: Add a manpage for nfbpf_compile
+
+Content is rather sparse, but still better than no manpage at all.
+
+Cc: Willem de Bruijn <willemb@google.com>
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 032dc4a18ab86173847b6016baf0819ccd7641c5)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ configure.ac             |  3 +-
+ utils/.gitignore         |  1 +
+ utils/Makefile.am        |  3 +-
+ utils/nfbpf_compile.8.in | 70 ++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 75 insertions(+), 2 deletions(-)
+ create mode 100644 utils/nfbpf_compile.8.in
+
+diff --git a/configure.ac b/configure.ac
+index 448ec918fd89b..e6c9832fa43ba 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -252,7 +252,8 @@ AC_CONFIG_FILES([Makefile extensions/GNUmakefile include/Makefile
+ 	libxtables/Makefile utils/Makefile
+ 	include/xtables-version.h include/iptables/internal.h
+ 	iptables/xtables-monitor.8
+-	utils/nfnl_osf.8])
++	utils/nfnl_osf.8
++	utils/nfbpf_compile.8])
+ AC_OUTPUT
+ 
+ 
+diff --git a/utils/.gitignore b/utils/.gitignore
+index 7c6afbf4e6a52..6300812b1701b 100644
+--- a/utils/.gitignore
++++ b/utils/.gitignore
+@@ -1,3 +1,4 @@
+ /nfnl_osf
+ /nfnl_osf.8
+ /nfbpf_compile
++/nfbpf_compile.8
+diff --git a/utils/Makefile.am b/utils/Makefile.am
+index 80029e303ff3b..d09a69749b85f 100644
+--- a/utils/Makefile.am
++++ b/utils/Makefile.am
+@@ -17,6 +17,7 @@ nfnl_osf_LDADD = ${libnfnetlink_LIBS}
+ endif
+ 
+ if ENABLE_BPFC
++man_MANS += nfbpf_compile.8
+ sbin_PROGRAMS += nfbpf_compile
+ nfbpf_compile_LDADD = -lpcap
+ endif
+@@ -26,4 +27,4 @@ sbin_PROGRAMS += nfsynproxy
+ nfsynproxy_LDADD = -lpcap
+ endif
+ 
+-CLEANFILES = nfnl_osf.8
++CLEANFILES = nfnl_osf.8 nfbpf_compile.8
+diff --git a/utils/nfbpf_compile.8.in b/utils/nfbpf_compile.8.in
+new file mode 100644
+index 0000000000000..d02979a5143ef
+--- /dev/null
++++ b/utils/nfbpf_compile.8.in
+@@ -0,0 +1,70 @@
++.TH NFBPF_COMPILE 8 "" "@PACKAGE_STRING@" "@PACKAGE_STRING@"
++
++.SH NAME
++nfbpf_compile \- generate bytecode for use with xt_bpf
++.SH SYNOPSIS
++
++.ad l
++.in +8
++.ti -8
++.B nfbpf_compile
++[
++.I LLTYPE
++]
++.I PROGRAM
++
++.ti -8
++.I LLTYPE
++:= {
++.BR EN10MB " | " RAW " | " SLIP " | "
++.I ...
++}
++
++.SH DESCRIPTION
++The
++.B nfbpf_compile
++utility aids in generating BPF byte code suitable for passing to
++the iptables
++.B bpf
++match.
++
++.SH OPTIONS
++
++.TP
++.I LLTYPE
++Link-layer header type to operate on. This is a name as defined in
++.RB < pcap/dlt.h >
++but with the leading
++.B DLT_
++prefix stripped. For use with iptables,
++.B RAW
++should be the right choice (it's also the default if not specified).
++
++.TP
++.I PROGRAM
++The BPF expression to compile, see
++.BR pcap-filter (7)
++for a description of the language.
++
++.SH EXIT STATUS
++The program returns 0 on success, 1 otherwise.
++
++.SH EXAMPLE
++Match incoming TCP packets with size bigger than 100 bytes:
++.P
++.in +8
++.EE
++bpf=$(nfbpf_compile 'tcp and greater 100')
++.br
++iptables -A INPUT -m bpf --bytecode "$bpf" -j ACCEPT
++.RE
++.P
++The description of
++.B bpf
++match in
++.BR iptables-extensions (8)
++lists a few more examples.
++
++.SH SEE ALSO
++.BR iptables-extensions (8),
++.BR pcap-filter (7)
+-- 
+2.21.0
+

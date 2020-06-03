@@ -1,0 +1,30 @@
+From 8b69d66b21f3699ee64c572bfba5df033ce768e0 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Mon, 3 Dec 2018 14:52:28 +0100
+Subject: [PATCH] extensions: libipt_realm: Document allowed realm values
+
+Older versions of iptables allowed for negative realm values by accident
+(they would be cast to unsigned). While this was clearly a bug, document
+the fixed behaviour.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 290d76b443bf24999d9caacb3fdd027d6e7112a1)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libipt_realm.man | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/extensions/libipt_realm.man b/extensions/libipt_realm.man
+index a40b1adc72ba2..72dff9b2e4212 100644
+--- a/extensions/libipt_realm.man
++++ b/extensions/libipt_realm.man
+@@ -5,3 +5,5 @@ setups involving dynamic routing protocols like BGP.
+ Matches a given realm number (and optionally mask). If not a number, value
+ can be a named realm from /etc/iproute2/rt_realms (mask can not be used in
+ that case).
++Both value and mask are four byte unsigned integers and may be specified in
++decimal, hex (by prefixing with "0x") or octal (if a leading zero is given).
+-- 
+2.21.0
+

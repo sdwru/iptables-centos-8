@@ -1,0 +1,49 @@
+From dc38548e6f745bcfb141324b36307dbfa941eabd Mon Sep 17 00:00:00 2001
+From: Florian Westphal <fw@strlen.de>
+Date: Fri, 22 Feb 2019 13:26:05 +0100
+Subject: [PATCH] arptables-nft: fix decoding of hlen on bigendian platforms
+
+The existing test fail with:
+extensions/libarpt_standard.t: ERROR: line 2 (cannot find: arptables -I INPUT -s 192.168.0.1)
+
+... because hlen is 0 instead of expected "6".
+The rule is correct, i.e. this is a decode/display bug: arp_hlen is
+specified as 'unsigned short' instead of uint8_t.
+
+On LSB systems, this doesn't matter but on MSB the value then is '0x600'
+instead of '0x006' which becomes 0 when assignment to the u8 header field.
+
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Acked-by: Phil Sutter <phil@nwl.cc>
+(cherry picked from commit d68672a641439b72bccfcb39d50f26fe3f915c19)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-arp.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/iptables/nft-arp.c b/iptables/nft-arp.c
+index 37b0985377bef..b436570291b7c 100644
+--- a/iptables/nft-arp.c
++++ b/iptables/nft-arp.c
+@@ -338,7 +338,8 @@ static void nft_arp_parse_payload(struct nft_xt_ctx *ctx,
+ 	struct iptables_command_state *cs = data;
+ 	struct arpt_entry *fw = &cs->arp;
+ 	struct in_addr addr;
+-	unsigned short int ar_hrd, ar_pro, ar_op, ar_hln;
++	uint16_t ar_hrd, ar_pro, ar_op;
++	uint8_t ar_hln;
+ 	bool inv;
+ 
+ 	switch (ctx->payload.offset) {
+@@ -364,7 +365,7 @@ static void nft_arp_parse_payload(struct nft_xt_ctx *ctx,
+ 			fw->arp.invflags |= ARPT_INV_ARPOP;
+ 		break;
+ 	case offsetof(struct arphdr, ar_hln):
+-		get_cmp_data(e, &ar_hln, sizeof(ar_op), &inv);
++		get_cmp_data(e, &ar_hln, sizeof(ar_hln), &inv);
+ 		fw->arp.arhln = ar_hln;
+ 		fw->arp.arhln_mask = 0xff;
+ 		if (inv)
+-- 
+2.21.0
+

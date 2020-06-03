@@ -1,0 +1,80 @@
+From b8d3fdae853c391312b2a0be533fd4a91bf80e8e Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Sun, 30 Dec 2018 20:06:08 +0100
+Subject: [PATCH] nft: Simplify nft_is_chain_compatible()
+
+Make use of nft_{table,chain}_builtin_find() instead of open-coding the
+list traversal. Since code is pretty obvious now, drop the comments
+added earlier.
+
+Fixes: e774b15299c27 ("nft: Review is_*_compatible() routines")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit fae77a24634365b18687a5f09357dbf4aaee2bc0)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 34 +++++++++-------------------------
+ 1 file changed, 9 insertions(+), 25 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 1fd3837f2d334..25e538b7e35d7 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -3077,11 +3077,12 @@ static int nft_is_rule_compatible(struct nftnl_rule *rule, void *data)
+ 
+ static int nft_is_chain_compatible(struct nftnl_chain *c, void *data)
+ {
+-	const struct builtin_chain *chains = NULL, *chain = NULL;
+-	const char *table, *name, *type;
++	const struct builtin_table *table;
++	const struct builtin_chain *chain;
++	const char *tname, *cname, *type;
+ 	struct nft_handle *h = data;
+ 	enum nf_inet_hooks hook;
+-	int i, prio;
++	int prio;
+ 
+ 	if (nftnl_rule_foreach(c, nft_is_rule_compatible, NULL))
+ 		return -1;
+@@ -3089,33 +3090,16 @@ static int nft_is_chain_compatible(struct nftnl_chain *c, void *data)
+ 	if (!nft_chain_builtin(c))
+ 		return 0;
+ 
+-	/* find chain's table in builtin tables */
+-	table = nftnl_chain_get_str(c, NFTNL_CHAIN_TABLE);
+-	for (i = 0; i < NFT_TABLE_MAX; i++) {
+-		const char *cur_table = h->tables[i].name;
+-
+-		if (!cur_table || strcmp(cur_table, table))
+-			continue;
+-
+-		chains = h->tables[i].chains;
+-		break;
+-	}
+-	if (!chains)
++	tname = nftnl_chain_get_str(c, NFTNL_CHAIN_TABLE);
++	table = nft_table_builtin_find(h, tname);
++	if (!table)
+ 		return -1;
+ 
+-	/* find chain in builtin chain list */
+-	name = nftnl_chain_get_str(c, NFTNL_CHAIN_NAME);
+-	for (i = 0; i < NF_INET_NUMHOOKS && chains[i].name; i++) {
+-		if (strcmp(name, chains[i].name))
+-			continue;
+-
+-		chain = &chains[i];
+-		break;
+-	}
++	cname = nftnl_chain_get_str(c, NFTNL_CHAIN_NAME);
++	chain = nft_chain_builtin_find(table, cname);
+ 	if (!chain)
+ 		return -1;
+ 
+-	/* compare properties */
+ 	type = nftnl_chain_get_str(c, NFTNL_CHAIN_TYPE);
+ 	prio = nftnl_chain_get_u32(c, NFTNL_CHAIN_PRIO);
+ 	hook = nftnl_chain_get_u32(c, NFTNL_CHAIN_HOOKNUM);
+-- 
+2.21.0
+

@@ -1,0 +1,106 @@
+From 48455efdfbee0df02c724a594cf8af8c440ded7d Mon Sep 17 00:00:00 2001
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+Date: Sat, 17 Nov 2018 18:16:45 +0100
+Subject: [PATCH] nft: move chain_cache back to struct nft_handle
+
+Place this back into the structure that stores the state information.
+
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 1847d9db753825b0bd1cd450b549f4e39f7bcc31)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 26 +++++++++++++-------------
+ iptables/nft.h |  4 +++-
+ 2 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index f0a60e1f568af..fdb4ead55a873 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -809,14 +809,14 @@ static void flush_chain_cache(struct nft_handle *h, const char *tablename)
+ 		if (tablename && strcmp(h->tables[i].name, tablename))
+ 			continue;
+ 
+-		if (h->tables[i].chain_cache) {
++		if (h->table[i].chain_cache) {
+ 			if (tablename) {
+-				nftnl_chain_list_foreach(h->tables[i].chain_cache,
++				nftnl_chain_list_foreach(h->table[i].chain_cache,
+ 							 __flush_chain_cache, NULL);
+ 				break;
+ 			} else {
+-				nftnl_chain_list_free(h->tables[i].chain_cache);
+-				h->tables[i].chain_cache = NULL;
++				nftnl_chain_list_free(h->table[i].chain_cache);
++				h->table[i].chain_cache = NULL;
+ 			}
+ 		}
+ 	}
+@@ -1276,13 +1276,13 @@ static int nftnl_chain_list_cb(const struct nlmsghdr *nlh, void *data)
+ 	if (!t)
+ 		goto out;
+ 
+-	if (!t->chain_cache) {
+-		t->chain_cache = nftnl_chain_list_alloc();
+-		if (!t->chain_cache)
++	if (!h->table[t->type].chain_cache) {
++		h->table[t->type].chain_cache = nftnl_chain_list_alloc();
++		if (!h->table[t->type].chain_cache)
+ 			goto out;
+ 	}
+ 
+-	nftnl_chain_list_add_tail(c, t->chain_cache);
++	nftnl_chain_list_add_tail(c, h->table[t->type].chain_cache);
+ 
+ 	return MNL_CB_OK;
+ out:
+@@ -1303,8 +1303,8 @@ struct nftnl_chain_list *nft_chain_list_get(struct nft_handle *h,
+ 	if (!t)
+ 		return NULL;
+ 
+-	if (t->chain_cache)
+-		return t->chain_cache;
++	if (h->table[t->type].chain_cache)
++		return h->table[t->type].chain_cache;
+ retry:
+ 	nlh = nftnl_chain_nlmsg_build_hdr(buf, NFT_MSG_GETCHAIN, h->family,
+ 					NLM_F_DUMP, h->seq);
+@@ -1315,10 +1315,10 @@ retry:
+ 		goto retry;
+ 	}
+ 
+-	if (!t->chain_cache)
+-		t->chain_cache = nftnl_chain_list_alloc();
++	if (!h->table[t->type].chain_cache)
++		h->table[t->type].chain_cache = nftnl_chain_list_alloc();
+ 
+-	return t->chain_cache;
++	return h->table[t->type].chain_cache;
+ }
+ 
+ static const char *policy_name[NF_ACCEPT+1] = {
+diff --git a/iptables/nft.h b/iptables/nft.h
+index 85c894e80e02e..1c028206221c4 100644
+--- a/iptables/nft.h
++++ b/iptables/nft.h
+@@ -26,7 +26,6 @@ struct builtin_table {
+ 	enum nft_table_type type;
+ 	struct builtin_chain chains[NF_INET_NUMHOOKS];
+ 	bool initialized;
+-	struct nftnl_chain_list *chain_cache;
+ };
+ 
+ struct nft_handle {
+@@ -40,6 +39,9 @@ struct nft_handle {
+ 	struct list_head	err_list;
+ 	struct nft_family_ops	*ops;
+ 	struct builtin_table	*tables;
++	struct {
++		struct nftnl_chain_list *chain_cache;
++	} table[NFT_TABLE_MAX];
+ 	struct nftnl_rule_list	*rule_cache;
+ 	bool			restore;
+ 	int8_t			config_done;
+-- 
+2.21.0
+

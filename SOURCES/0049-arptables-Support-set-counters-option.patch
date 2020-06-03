@@ -1,0 +1,42 @@
+From a4412aa91dff87ab27e4ad6e27f2a6c03ed0b5fb Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 22 Nov 2018 20:50:13 +0100
+Subject: [PATCH] arptables: Support --set-counters option
+
+Relevant code for this was already present (short option '-c'), just the
+long option definition was missing.
+
+While being at it, add '-c' to help text.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit b0466ae6fbc0a93b69591171c54aa79063e23f3d)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/xtables-arp.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/iptables/xtables-arp.c b/iptables/xtables-arp.c
+index 18cdced627c55..85bcc841b21f5 100644
+--- a/iptables/xtables-arp.c
++++ b/iptables/xtables-arp.c
+@@ -144,6 +144,7 @@ static struct option original_opts[] = {
+ 	{ "help", 2, 0, 'h' },
+ 	{ "line-numbers", 0, 0, '0' },
+ 	{ "modprobe", 1, 0, 'M' },
++	{ "set-counters", 1, 0, 'c' },
+ 	{ 0 }
+ };
+ 
+@@ -481,7 +482,7 @@ exit_printhelp(void)
+ "  --line-numbers		print line numbers when listing\n"
+ "  --exact	-x		expand numbers (display exact values)\n"
+ "  --modprobe=<command>		try to insert modules using this command\n"
+-"  --set-counters PKTS BYTES	set the counter during insert/append\n"
++"  --set-counters -c PKTS BYTES	set the counter during insert/append\n"
+ "[!] --version	-V		print package version.\n");
+ 	printf(" opcode strings: \n");
+         for (i = 0; i < NUMOPCODES; i++)
+-- 
+2.21.0
+

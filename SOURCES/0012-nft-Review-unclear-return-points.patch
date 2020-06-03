@@ -1,0 +1,43 @@
+From d54baa487a93f54d192de82704e1fba9675fcadc Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 20 Dec 2018 16:09:03 +0100
+Subject: [PATCH] nft: Review unclear return points
+
+When converting to per table chain caches, these two error returns were
+marked for review but apparently forgotten. Make sure error condition is
+propagated when returning at those points.
+
+Fixes: c58ecf9f8bcb7 ("xtables: Introduce per table chain caches")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 7e09582a57440f13796bdd5bd70466ef0913345b)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 9d20eb0eac2db..1fca1f17147f6 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -2311,7 +2311,7 @@ int nft_rule_list(struct nft_handle *h, const char *chain, const char *table,
+ 
+ 	list = nft_chain_list_get(h, table);
+ 	if (!list)
+-		goto err; /* XXX: return 0 instead? */
++		return 0;
+ 
+ 	iter = nftnl_chain_list_iter_create(list);
+ 	if (iter == NULL)
+@@ -2450,7 +2450,7 @@ int nft_rule_list_save(struct nft_handle *h, const char *chain,
+ 
+ 	list = nft_chain_list_get(h, table);
+ 	if (!list)
+-		goto err; /* XXX: correct? */
++		goto err;
+ 
+ 	/* Dump policies and custom chains first */
+ 	if (!rulenum)
+-- 
+2.21.0
+

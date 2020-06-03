@@ -1,0 +1,2642 @@
+From 2297d219cc3c5150c015ce52df5c96894dd6e3d6 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <psutter@redhat.com>
+Date: Wed, 12 Jun 2019 22:12:15 +0200
+Subject: [PATCH] Add iptables-test.py testsuite from v1.8.2
+
+Content gathered via:
+| git co v1.8.2 -- iptables-test.py extensions/\*.t
+
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/iptables.t           |   6 +
+ extensions/libarpt_CLASSIFY.t   |   4 +
+ extensions/libarpt_MARK.t       |   4 +
+ extensions/libarpt_mangle.t     |   5 +
+ extensions/libarpt_standard.t   |  14 ++
+ extensions/libebt_802_3.t       |   3 +
+ extensions/libebt_arp.t         |  12 +
+ extensions/libebt_arpreply.t    |   4 +
+ extensions/libebt_dnat.t        |   5 +
+ extensions/libebt_ip.t          |  13 ++
+ extensions/libebt_ip6.t         |  15 ++
+ extensions/libebt_log.t         |   6 +
+ extensions/libebt_mark.t        |   5 +
+ extensions/libebt_mark_m.t      |   6 +
+ extensions/libebt_nflog.t       |   5 +
+ extensions/libebt_pkttype.t     |  13 ++
+ extensions/libebt_redirect.t    |   4 +
+ extensions/libebt_snat.t        |   4 +
+ extensions/libebt_standard.t    |  11 +
+ extensions/libebt_stp.t         |  13 ++
+ extensions/libebt_vlan.t        |  13 ++
+ extensions/libip6t_DNAT.t       |  16 ++
+ extensions/libip6t_DNPT.t       |   7 +
+ extensions/libip6t_HL.t         |  10 +
+ extensions/libip6t_LOG.t        |  12 +
+ extensions/libip6t_MASQUERADE.t |   9 +
+ extensions/libip6t_NETMAP.t     |   4 +
+ extensions/libip6t_REDIRECT.t   |   6 +
+ extensions/libip6t_REJECT.t     |  11 +
+ extensions/libip6t_SNAT.t       |  11 +
+ extensions/libip6t_SNPT.t       |   7 +
+ extensions/libip6t_ah.t         |  15 ++
+ extensions/libip6t_dst.t        |   5 +
+ extensions/libip6t_eui64.t      |   8 +
+ extensions/libip6t_frag.t       |  13 ++
+ extensions/libip6t_hbh.t        |   5 +
+ extensions/libip6t_hl.t         |   8 +
+ extensions/libip6t_icmp6.t      |   6 +
+ extensions/libip6t_ipv6header.t |   4 +
+ extensions/libip6t_mh.t         |   6 +
+ extensions/libip6t_rt.t         |   5 +
+ extensions/libip6t_srh.t        |  28 +++
+ extensions/libip6t_standard.t   |   5 +
+ extensions/libipt_CLUSTERIP.t   |   4 +
+ extensions/libipt_DNAT.t        |  16 ++
+ extensions/libipt_ECN.t         |   5 +
+ extensions/libipt_LOG.t         |  12 +
+ extensions/libipt_MASQUERADE.t  |   9 +
+ extensions/libipt_NETMAP.t      |   4 +
+ extensions/libipt_REDIRECT.t    |   6 +
+ extensions/libipt_REJECT.t      |   9 +
+ extensions/libipt_SNAT.t        |  11 +
+ extensions/libipt_TTL.t         |  10 +
+ extensions/libipt_ah.t          |  13 ++
+ extensions/libipt_icmp.t        |  15 ++
+ extensions/libipt_realm.t       |   4 +
+ extensions/libipt_ttl.t         |  15 ++
+ extensions/libxt_AUDIT.t        |   6 +
+ extensions/libxt_CHECKSUM.t     |   4 +
+ extensions/libxt_CLASSIFY.t     |   9 +
+ extensions/libxt_CONNMARK.t     |   7 +
+ extensions/libxt_CONNSECMARK.t  |   5 +
+ extensions/libxt_CT.t           |  20 ++
+ extensions/libxt_DSCP.t         |  11 +
+ extensions/libxt_HMARK.t        |   8 +
+ extensions/libxt_IDLETIMER.t    |   4 +
+ extensions/libxt_LED.t          |   4 +
+ extensions/libxt_MARK.t         |   7 +
+ extensions/libxt_NFLOG.t        |  24 ++
+ extensions/libxt_NFQUEUE.t      |  16 ++
+ extensions/libxt_NOTRACK.t      |   4 +
+ extensions/libxt_RATEEST.t      |   2 +
+ extensions/libxt_SET.t          |   3 +
+ extensions/libxt_SYNPROXY.t     |   3 +
+ extensions/libxt_TCPMSS.t       |   6 +
+ extensions/libxt_TCPOPTSTRIP.t  |   8 +
+ extensions/libxt_TEE.t          |   4 +
+ extensions/libxt_TOS.t          |  16 ++
+ extensions/libxt_TPROXY.t       |   5 +
+ extensions/libxt_TRACE.t        |   3 +
+ extensions/libxt_addrtype.t     |  17 ++
+ extensions/libxt_bpf.t          |   2 +
+ extensions/libxt_cgroup.t       |   8 +
+ extensions/libxt_cluster.t      |  10 +
+ extensions/libxt_comment.t      |  12 +
+ extensions/libxt_connbytes.t    |  21 ++
+ extensions/libxt_connlabel.t    |  18 ++
+ extensions/libxt_connlimit.t    |  16 ++
+ extensions/libxt_connmark.t     |   9 +
+ extensions/libxt_conntrack.t    |  27 +++
+ extensions/libxt_cpu.t          |   6 +
+ extensions/libxt_dccp.t         |  30 +++
+ extensions/libxt_dscp.t         |  10 +
+ extensions/libxt_ecn.t          |   5 +
+ extensions/libxt_esp.t          |   8 +
+ extensions/libxt_hashlimit.t    |  33 +++
+ extensions/libxt_helper.t       |   6 +
+ extensions/libxt_ipcomp.t       |   3 +
+ extensions/libxt_iprange.t      |  11 +
+ extensions/libxt_length.t       |  10 +
+ extensions/libxt_limit.t        |   6 +
+ extensions/libxt_mac.t          |   5 +
+ extensions/libxt_mark.t         |   7 +
+ extensions/libxt_multiport.t    |  23 ++
+ extensions/libxt_nfacct.t       |  10 +
+ extensions/libxt_osf.t          |   4 +
+ extensions/libxt_owner.t        |  12 +
+ extensions/libxt_physdev.t      |  14 ++
+ extensions/libxt_pkttype.t      |   6 +
+ extensions/libxt_policy.t       |   8 +
+ extensions/libxt_quota.t        |   7 +
+ extensions/libxt_rateest.t      |  16 ++
+ extensions/libxt_recent.t       |  11 +
+ extensions/libxt_rpfilter.t     |   4 +
+ extensions/libxt_sctp.t         |  29 +++
+ extensions/libxt_set.t          |   4 +
+ extensions/libxt_socket.t       |   8 +
+ extensions/libxt_standard.t     |  11 +
+ extensions/libxt_state.t        |   6 +
+ extensions/libxt_statistic.t    |   8 +
+ extensions/libxt_string.t       |  18 ++
+ extensions/libxt_tcp.t          |  26 +++
+ extensions/libxt_tcpmss.t       |   6 +
+ extensions/libxt_time.t         |   4 +
+ extensions/libxt_tos.t          |  13 ++
+ extensions/libxt_u32.t          |   2 +
+ extensions/libxt_udp.t          |  22 ++
+ iptables-test.py                | 373 ++++++++++++++++++++++++++++++++
+ 128 files changed, 1603 insertions(+)
+ create mode 100644 extensions/iptables.t
+ create mode 100644 extensions/libarpt_CLASSIFY.t
+ create mode 100644 extensions/libarpt_MARK.t
+ create mode 100644 extensions/libarpt_mangle.t
+ create mode 100644 extensions/libarpt_standard.t
+ create mode 100644 extensions/libebt_802_3.t
+ create mode 100644 extensions/libebt_arp.t
+ create mode 100644 extensions/libebt_arpreply.t
+ create mode 100644 extensions/libebt_dnat.t
+ create mode 100644 extensions/libebt_ip.t
+ create mode 100644 extensions/libebt_ip6.t
+ create mode 100644 extensions/libebt_log.t
+ create mode 100644 extensions/libebt_mark.t
+ create mode 100644 extensions/libebt_mark_m.t
+ create mode 100644 extensions/libebt_nflog.t
+ create mode 100644 extensions/libebt_pkttype.t
+ create mode 100644 extensions/libebt_redirect.t
+ create mode 100644 extensions/libebt_snat.t
+ create mode 100644 extensions/libebt_standard.t
+ create mode 100644 extensions/libebt_stp.t
+ create mode 100644 extensions/libebt_vlan.t
+ create mode 100644 extensions/libip6t_DNAT.t
+ create mode 100644 extensions/libip6t_DNPT.t
+ create mode 100644 extensions/libip6t_HL.t
+ create mode 100644 extensions/libip6t_LOG.t
+ create mode 100644 extensions/libip6t_MASQUERADE.t
+ create mode 100644 extensions/libip6t_NETMAP.t
+ create mode 100644 extensions/libip6t_REDIRECT.t
+ create mode 100644 extensions/libip6t_REJECT.t
+ create mode 100644 extensions/libip6t_SNAT.t
+ create mode 100644 extensions/libip6t_SNPT.t
+ create mode 100644 extensions/libip6t_ah.t
+ create mode 100644 extensions/libip6t_dst.t
+ create mode 100644 extensions/libip6t_eui64.t
+ create mode 100644 extensions/libip6t_frag.t
+ create mode 100644 extensions/libip6t_hbh.t
+ create mode 100644 extensions/libip6t_hl.t
+ create mode 100644 extensions/libip6t_icmp6.t
+ create mode 100644 extensions/libip6t_ipv6header.t
+ create mode 100644 extensions/libip6t_mh.t
+ create mode 100644 extensions/libip6t_rt.t
+ create mode 100644 extensions/libip6t_srh.t
+ create mode 100644 extensions/libip6t_standard.t
+ create mode 100644 extensions/libipt_CLUSTERIP.t
+ create mode 100644 extensions/libipt_DNAT.t
+ create mode 100644 extensions/libipt_ECN.t
+ create mode 100644 extensions/libipt_LOG.t
+ create mode 100644 extensions/libipt_MASQUERADE.t
+ create mode 100644 extensions/libipt_NETMAP.t
+ create mode 100644 extensions/libipt_REDIRECT.t
+ create mode 100644 extensions/libipt_REJECT.t
+ create mode 100644 extensions/libipt_SNAT.t
+ create mode 100644 extensions/libipt_TTL.t
+ create mode 100644 extensions/libipt_ah.t
+ create mode 100644 extensions/libipt_icmp.t
+ create mode 100644 extensions/libipt_realm.t
+ create mode 100644 extensions/libipt_ttl.t
+ create mode 100644 extensions/libxt_AUDIT.t
+ create mode 100644 extensions/libxt_CHECKSUM.t
+ create mode 100644 extensions/libxt_CLASSIFY.t
+ create mode 100644 extensions/libxt_CONNMARK.t
+ create mode 100644 extensions/libxt_CONNSECMARK.t
+ create mode 100644 extensions/libxt_CT.t
+ create mode 100644 extensions/libxt_DSCP.t
+ create mode 100644 extensions/libxt_HMARK.t
+ create mode 100644 extensions/libxt_IDLETIMER.t
+ create mode 100644 extensions/libxt_LED.t
+ create mode 100644 extensions/libxt_MARK.t
+ create mode 100644 extensions/libxt_NFLOG.t
+ create mode 100644 extensions/libxt_NFQUEUE.t
+ create mode 100644 extensions/libxt_NOTRACK.t
+ create mode 100644 extensions/libxt_RATEEST.t
+ create mode 100644 extensions/libxt_SET.t
+ create mode 100644 extensions/libxt_SYNPROXY.t
+ create mode 100644 extensions/libxt_TCPMSS.t
+ create mode 100644 extensions/libxt_TCPOPTSTRIP.t
+ create mode 100644 extensions/libxt_TEE.t
+ create mode 100644 extensions/libxt_TOS.t
+ create mode 100644 extensions/libxt_TPROXY.t
+ create mode 100644 extensions/libxt_TRACE.t
+ create mode 100644 extensions/libxt_addrtype.t
+ create mode 100644 extensions/libxt_bpf.t
+ create mode 100644 extensions/libxt_cgroup.t
+ create mode 100644 extensions/libxt_cluster.t
+ create mode 100644 extensions/libxt_comment.t
+ create mode 100644 extensions/libxt_connbytes.t
+ create mode 100644 extensions/libxt_connlabel.t
+ create mode 100644 extensions/libxt_connlimit.t
+ create mode 100644 extensions/libxt_connmark.t
+ create mode 100644 extensions/libxt_conntrack.t
+ create mode 100644 extensions/libxt_cpu.t
+ create mode 100644 extensions/libxt_dccp.t
+ create mode 100644 extensions/libxt_dscp.t
+ create mode 100644 extensions/libxt_ecn.t
+ create mode 100644 extensions/libxt_esp.t
+ create mode 100644 extensions/libxt_hashlimit.t
+ create mode 100644 extensions/libxt_helper.t
+ create mode 100644 extensions/libxt_ipcomp.t
+ create mode 100644 extensions/libxt_iprange.t
+ create mode 100644 extensions/libxt_length.t
+ create mode 100644 extensions/libxt_limit.t
+ create mode 100644 extensions/libxt_mac.t
+ create mode 100644 extensions/libxt_mark.t
+ create mode 100644 extensions/libxt_multiport.t
+ create mode 100644 extensions/libxt_nfacct.t
+ create mode 100644 extensions/libxt_osf.t
+ create mode 100644 extensions/libxt_owner.t
+ create mode 100644 extensions/libxt_physdev.t
+ create mode 100644 extensions/libxt_pkttype.t
+ create mode 100644 extensions/libxt_policy.t
+ create mode 100644 extensions/libxt_quota.t
+ create mode 100644 extensions/libxt_rateest.t
+ create mode 100644 extensions/libxt_recent.t
+ create mode 100644 extensions/libxt_rpfilter.t
+ create mode 100644 extensions/libxt_sctp.t
+ create mode 100644 extensions/libxt_set.t
+ create mode 100644 extensions/libxt_socket.t
+ create mode 100644 extensions/libxt_standard.t
+ create mode 100644 extensions/libxt_state.t
+ create mode 100644 extensions/libxt_statistic.t
+ create mode 100644 extensions/libxt_string.t
+ create mode 100644 extensions/libxt_tcp.t
+ create mode 100644 extensions/libxt_tcpmss.t
+ create mode 100644 extensions/libxt_time.t
+ create mode 100644 extensions/libxt_tos.t
+ create mode 100644 extensions/libxt_u32.t
+ create mode 100644 extensions/libxt_udp.t
+ create mode 100755 iptables-test.py
+
+diff --git a/extensions/iptables.t b/extensions/iptables.t
+new file mode 100644
+index 0000000000000..b4b6d677abab1
+--- /dev/null
++++ b/extensions/iptables.t
+@@ -0,0 +1,6 @@
++:FORWARD
++-i alongifacename0;=;OK
++-i thisinterfaceistoolong0;;FAIL
++-i eth+ -o alongifacename+;=;OK
++! -i eth0;=;OK
++! -o eth+;=;OK
+diff --git a/extensions/libarpt_CLASSIFY.t b/extensions/libarpt_CLASSIFY.t
+new file mode 100644
+index 0000000000000..c30480d2b160c
+--- /dev/null
++++ b/extensions/libarpt_CLASSIFY.t
+@@ -0,0 +1,4 @@
++:OUTPUT
++-o lo --destination-mac 11:22:33:44:55:66;-o lo --dst-mac 11:22:33:44:55:66;OK
++--dst-mac Broadcast ;--dst-mac ff:ff:ff:ff:ff:ff;OK
++! -o eth+ -d 1.2.3.4/24 -j CLASSIFY --set-class 0000:0000;! -o eth+ -d 1.2.3.0/24 --h-length 6 --h-type 1 -j CLASSIFY --set-class 0000:0000;OK
+diff --git a/extensions/libarpt_MARK.t b/extensions/libarpt_MARK.t
+new file mode 100644
+index 0000000000000..cb4c2cb630357
+--- /dev/null
++++ b/extensions/libarpt_MARK.t
+@@ -0,0 +1,4 @@
++:INPUT,OUTPUT
++-d 0.0.0.0/8 -j MARK --set-mark 0x1;-d 0.0.0.0/8 --h-length 6 --h-type 1 -j MARK --set-xmark 0x1/0xffffffff;OK
++-s ! 0.0.0.0 -j MARK --and-mark 0x17;! -s 0.0.0.0 --h-length 6 --h-type 1 -j MARK --set-xmark 0x0/0xffffffe8;OK
++-s 0.0.0.0 -j MARK --or-mark 0x17;-s 0.0.0.0 --h-length 6 --h-type 1 -j MARK --set-xmark 0x17/0x17;OK
+diff --git a/extensions/libarpt_mangle.t b/extensions/libarpt_mangle.t
+new file mode 100644
+index 0000000000000..1d4c3977d2a4c
+--- /dev/null
++++ b/extensions/libarpt_mangle.t
+@@ -0,0 +1,5 @@
++:OUTPUT
++-s 1.2.3.4 -j mangle --mangle-ip-s 1.2.3.5;-s 1.2.3.4 --h-length 6 --h-type 1 -j mangle --mangle-ip-s 1.2.3.5;OK
++-d 1.2.3.4 -j mangle --mangle-ip-d 1.2.3.5;-d 1.2.3.4 --h-length 6 --h-type 1 -j mangle --mangle-ip-d 1.2.3.5;OK
++-d 1.2.3.4 --h-length 6 --h-type 1 -j mangle --mangle-mac-d 00:01:02:03:04:05;=;OK
++-d 1.2.3.4 -j mangle --mangle-mac-s 00:01:02:03:04:05;=;FAIL
+diff --git a/extensions/libarpt_standard.t b/extensions/libarpt_standard.t
+new file mode 100644
+index 0000000000000..bef682afec374
+--- /dev/null
++++ b/extensions/libarpt_standard.t
+@@ -0,0 +1,14 @@
++:INPUT
++-s 192.168.0.1;=;OK
++-s 0.0.0.0/8;=;OK
++-s ! 0.0.0.0;! -s 0.0.0.0;OK
++-d 192.168.0.1;=;OK
++! -d 0.0.0.0;=;OK
++-d 0.0.0.0/24;=;OK
++-i lo;=;OK
++! -i lo;=;OK
++-i ppp+;=;OK
++! -i ppp+;=;OK
++-i lo --destination-mac 11:22:33:44:55:66;-i lo --dst-mac 11:22:33:44:55:66;OK
++--source-mac Unicast;--src-mac 00:00:00:00:00:00/01:00:00:00:00:00;OK
++! --src-mac Multicast;! --src-mac 01:00:00:00:00:00/01:00:00:00:00:00;OK
+diff --git a/extensions/libebt_802_3.t b/extensions/libebt_802_3.t
+new file mode 100644
+index 0000000000000..61081bd6983a8
+--- /dev/null
++++ b/extensions/libebt_802_3.t
+@@ -0,0 +1,3 @@
++:INPUT,FORWARD,OUTPUT
++! --802_3-sap 0x0a -j CONTINUE;=;OK
++--802_3-type 0x000a -j RETURN;=;OK
+diff --git a/extensions/libebt_arp.t b/extensions/libebt_arp.t
+new file mode 100644
+index 0000000000000..a05ab12dc566f
+--- /dev/null
++++ b/extensions/libebt_arp.t
+@@ -0,0 +1,12 @@
++:INPUT,FORWARD,OUTPUT
++-p ARP --arp-op Request;=;OK
++-p ARP ! --arp-htype 1;=;OK
++-p ARP --arp-ptype 0x2;=;OK
++-p ARP --arp-ip-src 1.2.3.4;=;OK
++-p ARP ! --arp-ip-dst 1.2.3.4;=;OK
++-p ARP ! --arp-ip-src 0.0.0.0;=;OK
++-p ARP ! --arp-ip-dst 0.0.0.0/8;=;OK
++-p ARP --arp-mac-src 00:de:ad:be:ef:00;=;OK
++-p ARP --arp-mac-dst de:ad:be:ef:00:00/ff:ff:ff:ff:00:00;=;OK
++-p ARP --arp-gratuitous;=;OK
++--arp-htype 1;=;FAIL
+diff --git a/extensions/libebt_arpreply.t b/extensions/libebt_arpreply.t
+new file mode 100644
+index 0000000000000..6734501a106b5
+--- /dev/null
++++ b/extensions/libebt_arpreply.t
+@@ -0,0 +1,4 @@
++:PREROUTING
++*nat
++-p ARP -i foo -j arpreply --arpreply-mac de:ad:00:be:ee:ff --arpreply-target ACCEPT;=;OK
++-p ARP -i foo -j arpreply --arpreply-mac de:ad:00:be:ee:ff;=;OK
+diff --git a/extensions/libebt_dnat.t b/extensions/libebt_dnat.t
+new file mode 100644
+index 0000000000000..9428d237850fb
+--- /dev/null
++++ b/extensions/libebt_dnat.t
+@@ -0,0 +1,5 @@
++:PREROUTING
++*nat
++-i someport -j dnat --to-dst de:ad:0:be:ee:ff;-i someport -j dnat --to-dst de:ad:00:be:ee:ff --dnat-target ACCEPT;OK
++-j dnat --to-dst de:ad:00:be:ee:ff --dnat-target ACCEPT;=;OK
++-j dnat --to-dst de:ad:00:be:ee:ff --dnat-target CONTINUE;=;OK
+diff --git a/extensions/libebt_ip.t b/extensions/libebt_ip.t
+new file mode 100644
+index 0000000000000..01a91a7385fcc
+--- /dev/null
++++ b/extensions/libebt_ip.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++-p ip --ip-src ! 192.168.0.0/24 -j ACCEPT;-p IPv4 ! --ip-src 192.168.0.0/24 -j ACCEPT;OK
++-p IPv4 --ip-dst 10.0.0.1;=;OK
++-p IPv4 --ip-tos 0xFF;=;OK
++-p IPv4 ! --ip-tos 0xFF;=;OK
++-p IPv4 --ip-proto tcp --ip-dport 22;=;OK
++-p IPv4 --ip-proto udp --ip-sport 1024:65535;=;OK
++-p IPv4 --ip-proto 253;=;OK
++-p IPv4 --ip-proto icmp --ip-icmp-type echo-request;=;OK
++-p IPv4 --ip-proto icmp --ip-icmp-type 1/1;=;OK
++-p ip --ip-protocol icmp --ip-icmp-type ! 1:10;-p IPv4 --ip-proto icmp ! --ip-icmp-type 1:10/0:255 -j CONTINUE;OK
++--ip-proto icmp --ip-icmp-type 1/1;=;FAIL
++! -p ip --ip-proto icmp --ip-icmp-type 1/1;=;FAIL
+diff --git a/extensions/libebt_ip6.t b/extensions/libebt_ip6.t
+new file mode 100644
+index 0000000000000..6b3221ea58f62
+--- /dev/null
++++ b/extensions/libebt_ip6.t
+@@ -0,0 +1,15 @@
++:INPUT,FORWARD,OUTPUT
++-p ip6 ! --ip6-src dead::beef/64 -j ACCEPT;-p IPv6 ! --ip6-src dead::/64 -j ACCEPT;OK
++-p IPv6 --ip6-dst dead:beef::/64 -j ACCEPT;=;OK
++-p IPv6 --ip6-dst f00:ba::;=;OK
++-p IPv6 --ip6-tclass 0xFF;=;OK
++-p IPv6 --ip6-proto tcp --ip6-dport 22;=;OK
++-p IPv6 --ip6-proto tcp ! --ip6-dport 22;=;OK
++-p IPv6 --ip6-proto udp --ip6-sport 1024:65535;=;OK
++-p IPv6 --ip6-proto 253;=;OK
++-p IPv6 --ip6-proto ipv6-icmp --ip6-icmp-type echo-request -j CONTINUE;=;OK
++-p IPv6 --ip6-proto ipv6-icmp --ip6-icmp-type echo-request;=;OK
++-p ip6 --ip6-protocol icmpv6 --ip6-icmp-type 1/1;-p IPv6 --ip6-proto ipv6-icmp --ip6-icmp-type communication-prohibited -j CONTINUE;OK
++-p IPv6 --ip6-proto ipv6-icmp ! --ip6-icmp-type 1:10/0:255;=;OK
++--ip6-proto ipv6-icmp ! --ip6-icmp-type 1:10/0:255;=;FAIL
++! -p IPv6 --ip6-proto ipv6-icmp ! --ip6-icmp-type 1:10/0:255;=;FAIL
+diff --git a/extensions/libebt_log.t b/extensions/libebt_log.t
+new file mode 100644
+index 0000000000000..a0df6169112a0
+--- /dev/null
++++ b/extensions/libebt_log.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++--log;=;OK
++--log-level crit;=;OK
++--log-level 1;--log-level alert --log-prefix "";OK
++--log-level emerg --log-ip --log-arp --log-ip6;--log-level emerg --log-prefix "" --log-ip --log-arp --log-ip6 -j CONTINUE;OK
++--log-level crit --log-ip --log-arp --log-ip6 --log-prefix foo;--log-level crit --log-prefix "foo" --log-ip --log-arp --log-ip6 -j CONTINUE;OK
+diff --git a/extensions/libebt_mark.t b/extensions/libebt_mark.t
+new file mode 100644
+index 0000000000000..2d8f9d7a972ad
+--- /dev/null
++++ b/extensions/libebt_mark.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-j mark --mark-set 1;-j mark --mark-set 0x1 --mark-target ACCEPT;OK
++-j mark --mark-or 0xa --mark-target CONTINUE;=;OK
++-j mark --mark-and 0x1 --mark-target RETURN;=;OK
++-j mark --mark-xor 0x1 --mark-target CONTINUE;=;OK
+diff --git a/extensions/libebt_mark_m.t b/extensions/libebt_mark_m.t
+new file mode 100644
+index 0000000000000..9ad41704fbb82
+--- /dev/null
++++ b/extensions/libebt_mark_m.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++--mark 42;--mark 0x2a;OK
++--mark ! 42;! --mark 0x2a;OK
++--mark 42/0xff;--mark 0x2a/0xff;OK
++! --mark 0x1/0xff;=;OK
++--mark /0x2;=;OK
+diff --git a/extensions/libebt_nflog.t b/extensions/libebt_nflog.t
+new file mode 100644
+index 0000000000000..f867df303fa95
+--- /dev/null
++++ b/extensions/libebt_nflog.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++--nflog;=;OK
++--nflog-group 42;=;OK
++--nflog-range 42;--nflog-group 1 --nflog-range 42 -j CONTINUE;OK
++--nflog-threshold 100 --nflog-prefix foo;--nflog-prefix "foo" --nflog-group 1 --nflog-threshold 100 -j CONTINUE;OK
+diff --git a/extensions/libebt_pkttype.t b/extensions/libebt_pkttype.t
+new file mode 100644
+index 0000000000000..f870f5c7f05c4
+--- /dev/null
++++ b/extensions/libebt_pkttype.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++--pkttype-type host;=;OK
++! --pkttype-type host;=;OK
++--pkttype-type broadcast;=;OK
++! --pkttype-type broadcast;=;OK
++--pkttype-type multicast;=;OK
++! --pkttype-type multicast;=;OK
++--pkttype-type otherhost;=;OK
++! --pkttype-type otherhost;=;OK
++--pkttype-type outgoing;=;OK
++! --pkttype-type outgoing;=;OK
++--pkttype-type loopback;=;OK
++! --pkttype-type loopback;=;OK
+diff --git a/extensions/libebt_redirect.t b/extensions/libebt_redirect.t
+new file mode 100644
+index 0000000000000..23858afa3b588
+--- /dev/null
++++ b/extensions/libebt_redirect.t
+@@ -0,0 +1,4 @@
++:PREROUTING
++*nat
++-j redirect;=;OK
++-j redirect --redirect-target RETURN;=;OK
+diff --git a/extensions/libebt_snat.t b/extensions/libebt_snat.t
+new file mode 100644
+index 0000000000000..639b13f300c9d
+--- /dev/null
++++ b/extensions/libebt_snat.t
+@@ -0,0 +1,4 @@
++:POSTROUTING
++*nat
++-o someport -j snat --to-source a:b:c:d:e:f;-o someport -j snat --to-src 0a:0b:0c:0d:0e:0f --snat-target ACCEPT;OK
++-o someport+ -j snat --to-src de:ad:00:be:ee:ff --snat-target CONTINUE;=;OK
+diff --git a/extensions/libebt_standard.t b/extensions/libebt_standard.t
+new file mode 100644
+index 0000000000000..72081fd6575a0
+--- /dev/null
++++ b/extensions/libebt_standard.t
+@@ -0,0 +1,11 @@
++:INPUT,FORWARD,OUTPUT
++-d de:ad:be:ef:00:00;=;OK
++-s 0:0:0:0:0:0;-s 00:00:00:00:00:00;OK
++-d 00:00:00:00:00:00;=;OK
++-s de:ad:be:ef:0:00 -j RETURN;-s de:ad:be:ef:00:00 -j RETURN;OK
++-d de:ad:be:ef:00:00 -j CONTINUE;=;OK
++-d de:ad:be:ef:0:00/ff:ff:ff:ff:0:0 -j DROP;-d de:ad:be:ef:00:00/ff:ff:ff:ff:00:00 -j DROP;OK
++-p ARP -j ACCEPT;=;OK
++! -p ARP -j ACCEPT;=;OK
++-p 0 -j ACCEPT;=;FAIL
++! -p 0 -j ACCEPT;=;FAIL
+diff --git a/extensions/libebt_stp.t b/extensions/libebt_stp.t
+new file mode 100644
+index 0000000000000..0c6b77b91454b
+--- /dev/null
++++ b/extensions/libebt_stp.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++--stp-type 1;=;OK
++--stp-flags 0x1;--stp-flags topology-change -j CONTINUE;OK
++--stp-root-prio 1  -j ACCEPT;=;OK
++--stp-root-addr 0d:ea:d0:0b:ee:f0;=;OK
++--stp-root-cost 1;=;OK
++--stp-sender-prio 1;=;OK
++--stp-sender-addr de:ad:be:ef:00:00;=;OK
++--stp-port 1;=;OK
++--stp-msg-age 1;=;OK
++--stp-max-age 1;=;OK
++--stp-hello-time 1;=;OK
++--stp-forward-delay 1;=;OK
+diff --git a/extensions/libebt_vlan.t b/extensions/libebt_vlan.t
+new file mode 100644
+index 0000000000000..106374cd9cb80
+--- /dev/null
++++ b/extensions/libebt_vlan.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++-p 802_1Q --vlan-id 42;=;OK
++-p 802_1Q ! --vlan-id 42;=;OK
++-p 802_1Q --vlan-prio 1;=;OK
++-p 802_1Q ! --vlan-prio 1;=;OK
++-p 802_1Q --vlan-encap ip;-p 802_1Q --vlan-encap 0800 -j CONTINUE;OK
++-p 802_1Q --vlan-encap 0800 ;=;OK
++-p 802_1Q ! --vlan-encap 0800 ;=;OK
++-p 802_1Q --vlan-encap IPv6 ! --vlan-id 1;-p 802_1Q ! --vlan-id 1 --vlan-encap 86DD -j CONTINUE;OK
++-p 802_1Q ! --vlan-id 1 --vlan-encap 86DD;=;OK
++--vlan-encap ip;=;FAIL
++--vlan-id 2;=;FAIL
++--vlan-prio 1;=;FAIL
+diff --git a/extensions/libip6t_DNAT.t b/extensions/libip6t_DNAT.t
+new file mode 100644
+index 0000000000000..ec7d61f418cfe
+--- /dev/null
++++ b/extensions/libip6t_DNAT.t
+@@ -0,0 +1,16 @@
++:PREROUTING
++*nat
++-j DNAT --to-destination dead::beef;=;OK
++-j DNAT --to-destination dead::beef-dead::fee7;=;OK
++-j DNAT --to-destination [dead::beef]:1025-65535;;FAIL
++-j DNAT --to-destination [dead::beef] --to-destination [dead::fee7];;FAIL
++-p tcp -j DNAT --to-destination [dead::beef]:1025-65535;=;OK
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1025-65535;=;OK
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1025-65536;;FAIL
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1025-65535 --to-destination [dead::beef-dead::fee8]:1025-65535;;FAIL
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1000-2000/1000;=;OK
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1000-2000/3000;=;OK
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1000-2000/65535;=;OK
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1000-2000/0;;FAIL
++-p tcp -j DNAT --to-destination [dead::beef-dead::fee7]:1000-2000/65536;;FAIL
++-j DNAT;;FAIL
+diff --git a/extensions/libip6t_DNPT.t b/extensions/libip6t_DNPT.t
+new file mode 100644
+index 0000000000000..0406dc90d2c6e
+--- /dev/null
++++ b/extensions/libip6t_DNPT.t
+@@ -0,0 +1,7 @@
++:PREROUTING
++*mangle
++-j DNPT --src-pfx dead::/64 --dst-pfx 1c3::/64;=;OK
++-j DNPT --src-pfx dead::beef --dst-pfx 1c3::/64;;FAIL
++-j DNPT --src-pfx dead::/64;;FAIL
++-j DNPT --dst-pfx dead::/64;;FAIL
++-j DNPT;;FAIL
+diff --git a/extensions/libip6t_HL.t b/extensions/libip6t_HL.t
+new file mode 100644
+index 0000000000000..4e529f883b2c5
+--- /dev/null
++++ b/extensions/libip6t_HL.t
+@@ -0,0 +1,10 @@
++:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j HL --hl-set 42;=;OK
++-j HL --hl-inc 1;=;OK
++-j HL --hl-dec 1;=;OK
++-j HL --hl-set 256;;FAIL
++-j HL --hl-inc 0;;FAIL
++-j HL --hl-dec 0;;FAIL
++-j HL --hl-dec 1 --hl-inc 1;;FAIL
++-j HL --hl-set --hl-inc 1;;FAIL
+diff --git a/extensions/libip6t_LOG.t b/extensions/libip6t_LOG.t
+new file mode 100644
+index 0000000000000..fbf5118b2382a
+--- /dev/null
++++ b/extensions/libip6t_LOG.t
+@@ -0,0 +1,12 @@
++:INPUT,FORWARD,OUTPUT
++-j LOG;-j LOG;OK
++-j LOG --log-prefix "test: ";=;OK
++-j LOG --log-prefix "test: " --log-level 1;=;OK
++# iptables displays the log-level output using the number; not the string
++-j LOG --log-prefix "test: " --log-level alert;-j LOG --log-prefix "test: " --log-level 1;OK
++-j LOG --log-prefix "test: " --log-tcp-sequence;=;OK
++-j LOG --log-prefix "test: " --log-tcp-options;=;OK
++-j LOG --log-prefix "test: " --log-ip-options;=;OK
++-j LOG --log-prefix "test: " --log-uid;=;OK
++-j LOG --log-prefix "test: " --log-level bad;;FAIL
++-j LOG --log-prefix;;FAIL
+diff --git a/extensions/libip6t_MASQUERADE.t b/extensions/libip6t_MASQUERADE.t
+new file mode 100644
+index 0000000000000..e25d2a04ab7b0
+--- /dev/null
++++ b/extensions/libip6t_MASQUERADE.t
+@@ -0,0 +1,9 @@
++:POSTROUTING
++*nat
++-j MASQUERADE;=;OK
++-j MASQUERADE --random;=;OK
++-j MASQUERADE --random-fully;=;OK
++-p tcp -j MASQUERADE --to-ports 1024;=;OK
++-p udp -j MASQUERADE --to-ports 1024-65535;=;OK
++-p udp -j MASQUERADE --to-ports 1024-65536;;FAIL
++-p udp -j MASQUERADE --to-ports -1;;FAIL
+diff --git a/extensions/libip6t_NETMAP.t b/extensions/libip6t_NETMAP.t
+new file mode 100644
+index 0000000000000..043562d261243
+--- /dev/null
++++ b/extensions/libip6t_NETMAP.t
+@@ -0,0 +1,4 @@
++:PREROUTING,INPUT,OUTPUT,POSTROUTING
++*nat
++-j NETMAP --to dead::/64;=;OK
++-j NETMAP --to dead::beef;=;OK
+diff --git a/extensions/libip6t_REDIRECT.t b/extensions/libip6t_REDIRECT.t
+new file mode 100644
+index 0000000000000..a0fb0ed19a5ea
+--- /dev/null
++++ b/extensions/libip6t_REDIRECT.t
+@@ -0,0 +1,6 @@
++:PREROUTING,OUTPUT
++*nat
++-p tcp -j REDIRECT --to-ports 42;=;OK
++-p udp -j REDIRECT --to-ports 42-1234;=;OK
++-p tcp -j REDIRECT --to-ports 42-1234 --random;=;OK
++-j REDIRECT --to-ports 42;;FAIL
+diff --git a/extensions/libip6t_REJECT.t b/extensions/libip6t_REJECT.t
+new file mode 100644
+index 0000000000000..d2b337d7ebdeb
+--- /dev/null
++++ b/extensions/libip6t_REJECT.t
+@@ -0,0 +1,11 @@
++:INPUT,FORWARD,OUTPUT
++-j REJECT;=;OK
++# manpage for IPv6 variant of REJECT does not show up for some reason?
++-j REJECT --reject-with icmp6-no-route;=;OK
++-j REJECT --reject-with icmp6-adm-prohibited;=;OK
++-j REJECT --reject-with icmp6-addr-unreachable;=;OK
++-j REJECT --reject-with icmp6-port-unreachable;=;OK
++-j REJECT --reject-with icmp6-policy-fail;=;OK
++-j REJECT --reject-with icmp6-reject-route;=;OK
++-p tcp -j REJECT --reject-with tcp-reset;=;OK
++-j REJECT --reject-with tcp-reset;;FAIL
+diff --git a/extensions/libip6t_SNAT.t b/extensions/libip6t_SNAT.t
+new file mode 100644
+index 0000000000000..d188a6bb3d559
+--- /dev/null
++++ b/extensions/libip6t_SNAT.t
+@@ -0,0 +1,11 @@
++:POSTROUTING
++*nat
++-j SNAT --to-source dead::beef;=;OK
++-j SNAT --to-source dead::beef-dead::fee7;=;OK
++-j SNAT --to-source [dead::beef]:1025-65535;;FAIL
++-j SNAT --to-source [dead::beef] --to-source [dead::fee7];;FAIL
++-p tcp -j SNAT --to-source [dead::beef]:1025-65535;=;OK
++-p tcp -j SNAT --to-source [dead::beef-dead::fee7]:1025-65535;=;OK
++-p tcp -j SNAT --to-source [dead::beef-dead::fee7]:1025-65536;;FAIL
++-p tcp -j SNAT --to-source [dead::beef-dead::fee7]:1025-65535 --to-source [dead::beef-dead::fee8]:1025-65535;;FAIL
++-j SNAT;;FAIL
+diff --git a/extensions/libip6t_SNPT.t b/extensions/libip6t_SNPT.t
+new file mode 100644
+index 0000000000000..7ed6d0c95bb35
+--- /dev/null
++++ b/extensions/libip6t_SNPT.t
+@@ -0,0 +1,7 @@
++:INPUT,POSTROUTING
++*mangle
++-j SNPT --src-pfx dead::/64 --dst-pfx 1c3::/64;=;OK
++-j SNPT --src-pfx dead::beef --dst-pfx 1c3::/64;;FAIL
++-j SNPT --src-pfx dead::/64;;FAIL
++-j SNPT --dst-pfx dead::/64;;FAIL
++-j SNPT;;FAIL
+diff --git a/extensions/libip6t_ah.t b/extensions/libip6t_ah.t
+new file mode 100644
+index 0000000000000..c1898d44cf193
+--- /dev/null
++++ b/extensions/libip6t_ah.t
+@@ -0,0 +1,15 @@
++:INPUT,FORWARD,OUTPUT
++-m ah --ahspi 0;=;OK
++-m ah --ahspi 4294967295;=;OK
++-m ah --ahspi 0:4294967295;-m ah;OK
++-m ah ! --ahspi 0;=;OK
++# ERROR: should fail: iptables -A FORWARD -t mangle -j CLASSIFY --set-class 1:-1
++# -m ah --ahres;=;OK
++# ERROR: line 7 (cannot find: ip6tables -I INPUT -m ah --ahlen 32
++# -m ah --ahlen 32;=;OK
++-m ah --ahspi -1;;FAIL
++-m ah --ahspi 4294967296;;FAIL
++-m ah --ahspi invalid;;FAIL
++-m ah --ahspi 0:invalid;;FAIL
++-m ah --ahspi;;FAIL
++-m ah;=;OK
+diff --git a/extensions/libip6t_dst.t b/extensions/libip6t_dst.t
+new file mode 100644
+index 0000000000000..0b0013b57fc0b
+--- /dev/null
++++ b/extensions/libip6t_dst.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-m dst --dst-len 0;=;OK
++-m dst --dst-opts 149:92,12:12,123:12;=;OK
++-m dst ! --dst-len 42;=;OK
++-m dst --dst-len 42 --dst-opts 149:92,12:12,123:12;=;OK
+diff --git a/extensions/libip6t_eui64.t b/extensions/libip6t_eui64.t
+new file mode 100644
+index 0000000000000..e5aaaacef48bf
+--- /dev/null
++++ b/extensions/libip6t_eui64.t
+@@ -0,0 +1,8 @@
++:PREROUTING
++*raw
++-m eui64;=;OK
++:INPUT,FORWARD
++*filter
++-m eui64;=;OK
++:OUTPUT
++-m eui64;;FAIL
+diff --git a/extensions/libip6t_frag.t b/extensions/libip6t_frag.t
+new file mode 100644
+index 0000000000000..299fa03f8845b
+--- /dev/null
++++ b/extensions/libip6t_frag.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++-m frag --fragid 1:42;=;OK
++-m frag --fraglen 42;=;OK
++-m frag --fragres;=;OK
++-m frag --fragfirst;=;OK
++-m frag --fragmore;=;OK
++-m frag --fraglast;=;OK
++-m frag ! --fragid 1 ! --fraglen 42 --fragres --fragfirst;=;OK
++-m frag --fragfirst --fragmore;=;OK
++-m frag --fragfirst --fraglast;=;OK
++-m frag --fraglast --fragmore;;FAIL
++-d ff02::fb/128 -p udp -m udp --dport 5353 -m frag --fragmore;=;OK
++-d fe80::/64 -p udp --dport 546 -m frag --fraglast;-d fe80::/64 -p udp -m udp --dport 546 -m frag --fraglast;OK
+diff --git a/extensions/libip6t_hbh.t b/extensions/libip6t_hbh.t
+new file mode 100644
+index 0000000000000..4b58f25a1301a
+--- /dev/null
++++ b/extensions/libip6t_hbh.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-m hbh;=;OK
++-m hbh --hbh-len 42;=;OK
++-m hbh ! --hbh-len 42;=;OK
++-m hbh --hbh-len 42 --hbh-opts 1:2,23:42,4:6,8:10,42,23,4:5;=;OK
+diff --git a/extensions/libip6t_hl.t b/extensions/libip6t_hl.t
+new file mode 100644
+index 0000000000000..b02816afb827b
+--- /dev/null
++++ b/extensions/libip6t_hl.t
+@@ -0,0 +1,8 @@
++:INPUT,FORWARD,OUTPUT
++-m hl;;FAIL
++-m hl --hl-eq 42;=;OK
++-m hl ! --hl-eq 42;=;OK
++-m hl --hl-lt 42;=;OK
++-m hl --hl-gt 42;=;OK
++-m hl --hl-gt 42 --hl-eq 42;;FAIL
++-m hl --hl-gt;;FAIL
+diff --git a/extensions/libip6t_icmp6.t b/extensions/libip6t_icmp6.t
+new file mode 100644
+index 0000000000000..028cfc16ede24
+--- /dev/null
++++ b/extensions/libip6t_icmp6.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m icmpv6;;FAIL
++-p ipv6-icmp -m icmp6 --icmpv6-type 1/0;=;OK
++-p ipv6-icmp -m icmp6 --icmpv6-type 2;=;OK
++# cannot use option twice:
++-p ipv6-icmp -m icmp6 --icmpv6-type no-route --icmpv6-type packet-too-big;;FAIL
+diff --git a/extensions/libip6t_ipv6header.t b/extensions/libip6t_ipv6header.t
+new file mode 100644
+index 0000000000000..67fa47998ee09
+--- /dev/null
++++ b/extensions/libip6t_ipv6header.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-m ipv6header --header hop-by-hop;=;OK
++-m ipv6header --header hop-by-hop --soft;=;OK
++-m ipv6header --header ipv6-nonxt;=;OK
+diff --git a/extensions/libip6t_mh.t b/extensions/libip6t_mh.t
+new file mode 100644
+index 0000000000000..6b76d13d0a00f
+--- /dev/null
++++ b/extensions/libip6t_mh.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m mh;;FAIL
++-p mobility-header -m mh;=;OK
++-p mobility-header -m mh --mh-type 1;=;OK
++-p mobility-header -m mh ! --mh-type 4;=;OK
++-p mobility-header -m mh --mh-type 4:123;=;OK
+diff --git a/extensions/libip6t_rt.t b/extensions/libip6t_rt.t
+new file mode 100644
+index 0000000000000..3c7b2d981324a
+--- /dev/null
++++ b/extensions/libip6t_rt.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-m rt --rt-type 0 --rt-segsleft 1:23 --rt-len 42 --rt-0-res;=;OK
++-m rt --rt-type 0 ! --rt-segsleft 1:23 ! --rt-len 42 --rt-0-res;=;OK
++-m rt ! --rt-type 1 ! --rt-segsleft 12:23 ! --rt-len 42;=;OK
++-m rt;=;OK
+diff --git a/extensions/libip6t_srh.t b/extensions/libip6t_srh.t
+new file mode 100644
+index 0000000000000..07b540319233e
+--- /dev/null
++++ b/extensions/libip6t_srh.t
+@@ -0,0 +1,28 @@
++:INPUT,FORWARD,OUTPUT
++-m srh --srh-next-hdr 17;=;OK
++-m srh --srh-hdr-len-eq 8;=;OK
++-m srh --srh-hdr-len-gt 8;=;OK
++-m srh --srh-hdr-len-lt 8;=;OK
++-m srh --srh-segs-left-eq 1;=;OK
++-m srh --srh-segs-left-gt 1;=;OK
++-m srh --srh-segs-left-lt 1;=;OK
++-m srh --srh-last-entry-eq 4;=;OK
++-m srh --srh-last-entry-gt 4;=;OK
++-m srh --srh-last-entry-lt 4;=;OK
++-m srh --srh-tag 0;=;OK
++-m srh ! --srh-next-hdr 17;=;OK
++-m srh ! --srh-hdr-len-eq 8;=;OK
++-m srh ! --srh-hdr-len-gt 8;=;OK
++-m srh ! --srh-hdr-len-lt 8;=;OK
++-m srh ! --srh-segs-left-eq 1;=;OK
++-m srh ! --srh-segs-left-gt 1;=;OK
++-m srh ! --srh-segs-left-lt 1;=;OK
++-m srh ! --srh-last-entry-eq 4;=;OK
++-m srh ! --srh-last-entry-gt 4;=;OK
++-m srh ! --srh-last-entry-lt 4;=;OK
++-m srh ! --srh-tag 0;=;OK
++-m srh --srh-next-hdr 17 --srh-segs-left-eq 1 --srh-last-entry-eq 4 --srh-tag 0;=;OK
++-m srh ! --srh-next-hdr 17 ! --srh-segs-left-eq 0 --srh-tag 0;=;OK
++-m srh --srh-psid A::/64 --srh-nsid B:: --srh-lsid C::/0;;OK
++-m srh ! --srh-psid A::/64 ! --srh-nsid B:: ! --srh-lsid C::/0;;OK
++-m srh;=;OK
+diff --git a/extensions/libip6t_standard.t b/extensions/libip6t_standard.t
+new file mode 100644
+index 0000000000000..a528af10ea152
+--- /dev/null
++++ b/extensions/libip6t_standard.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-s ::/128;=;OK
++! -d ::;! -d ::/128;OK
++! -s ::;! -s ::/128;OK
++-s ::/64;=;OK
+diff --git a/extensions/libipt_CLUSTERIP.t b/extensions/libipt_CLUSTERIP.t
+new file mode 100644
+index 0000000000000..5af555e005c1d
+--- /dev/null
++++ b/extensions/libipt_CLUSTERIP.t
+@@ -0,0 +1,4 @@
++:INPUT
++-d 10.31.3.236/32 -i lo -j CLUSTERIP --new --hashmode sourceip --clustermac 01:AA:7B:47:F7:D7 --total-nodes 2 --local-node 0 --hash-init 1;=;FAIL
++-d 10.31.3.236/32 -i lo -j CLUSTERIP --new --hashmode sourceip --clustermac 01:AA:7B:47:F7:D7 --total-nodes 2 --local-node 1 --hash-init 1;=;OK
++-d 10.31.3.236/32 -i lo -j CLUSTERIP --new --hashmode sourceip --clustermac 01:AA:7B:47:F7:D7 --total-nodes 2 --local-node 2 --hash-init 1;=;OK
+diff --git a/extensions/libipt_DNAT.t b/extensions/libipt_DNAT.t
+new file mode 100644
+index 0000000000000..1c4413b9b3bb5
+--- /dev/null
++++ b/extensions/libipt_DNAT.t
+@@ -0,0 +1,16 @@
++:PREROUTING
++*nat
++-j DNAT --to-destination 1.1.1.1;=;OK
++-j DNAT --to-destination 1.1.1.1-1.1.1.10;=;OK
++-j DNAT --to-destination 1.1.1.1:1025-65535;;FAIL
++-j DNAT --to-destination 1.1.1.1 --to-destination 2.2.2.2;;FAIL
++-p tcp -j DNAT --to-destination 1.1.1.1:1025-65535;=;OK
++-p tcp -j DNAT --to-destination 1.1.1.1-1.1.1.10:1025-65535;=;OK
++-p tcp -j DNAT --to-destination 1.1.1.1-1.1.1.10:1025-65536;;FAIL
++-p tcp -j DNAT --to-destination 1.1.1.1-1.1.1.10:1025-65535 --to-destination 2.2.2.2-2.2.2.20:1025-65535;;FAIL
++-p tcp -j DNAT --to-destination 1.1.1.1:1000-2000/1000;=;OK
++-p tcp -j DNAT --to-destination 1.1.1.1:1000-2000/3000;=;OK
++-p tcp -j DNAT --to-destination 1.1.1.1:1000-2000/65535;=;OK
++-p tcp -j DNAT --to-destination 1.1.1.1:1000-2000/0;;FAIL
++-p tcp -j DNAT --to-destination 1.1.1.1:1000-2000/65536;;FAIL
++-j DNAT;;FAIL
+diff --git a/extensions/libipt_ECN.t b/extensions/libipt_ECN.t
+new file mode 100644
+index 0000000000000..2e09205212e7f
+--- /dev/null
++++ b/extensions/libipt_ECN.t
+@@ -0,0 +1,5 @@
++:PREROUTING,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j ECN;;FAIL
++-p tcp -j ECN;;FAIL
++-p tcp -j ECN --ecn-tcp-remove;=;OK
+diff --git a/extensions/libipt_LOG.t b/extensions/libipt_LOG.t
+new file mode 100644
+index 0000000000000..fbf5118b2382a
+--- /dev/null
++++ b/extensions/libipt_LOG.t
+@@ -0,0 +1,12 @@
++:INPUT,FORWARD,OUTPUT
++-j LOG;-j LOG;OK
++-j LOG --log-prefix "test: ";=;OK
++-j LOG --log-prefix "test: " --log-level 1;=;OK
++# iptables displays the log-level output using the number; not the string
++-j LOG --log-prefix "test: " --log-level alert;-j LOG --log-prefix "test: " --log-level 1;OK
++-j LOG --log-prefix "test: " --log-tcp-sequence;=;OK
++-j LOG --log-prefix "test: " --log-tcp-options;=;OK
++-j LOG --log-prefix "test: " --log-ip-options;=;OK
++-j LOG --log-prefix "test: " --log-uid;=;OK
++-j LOG --log-prefix "test: " --log-level bad;;FAIL
++-j LOG --log-prefix;;FAIL
+diff --git a/extensions/libipt_MASQUERADE.t b/extensions/libipt_MASQUERADE.t
+new file mode 100644
+index 0000000000000..e25d2a04ab7b0
+--- /dev/null
++++ b/extensions/libipt_MASQUERADE.t
+@@ -0,0 +1,9 @@
++:POSTROUTING
++*nat
++-j MASQUERADE;=;OK
++-j MASQUERADE --random;=;OK
++-j MASQUERADE --random-fully;=;OK
++-p tcp -j MASQUERADE --to-ports 1024;=;OK
++-p udp -j MASQUERADE --to-ports 1024-65535;=;OK
++-p udp -j MASQUERADE --to-ports 1024-65536;;FAIL
++-p udp -j MASQUERADE --to-ports -1;;FAIL
+diff --git a/extensions/libipt_NETMAP.t b/extensions/libipt_NETMAP.t
+new file mode 100644
+index 0000000000000..31924b985cd6f
+--- /dev/null
++++ b/extensions/libipt_NETMAP.t
+@@ -0,0 +1,4 @@
++:PREROUTING,INPUT,OUTPUT,POSTROUTING
++*nat
++-j NETMAP --to 1.2.3.0/24;=;OK
++-j NETMAP --to 1.2.3.4;=;OK
+diff --git a/extensions/libipt_REDIRECT.t b/extensions/libipt_REDIRECT.t
+new file mode 100644
+index 0000000000000..a0fb0ed19a5ea
+--- /dev/null
++++ b/extensions/libipt_REDIRECT.t
+@@ -0,0 +1,6 @@
++:PREROUTING,OUTPUT
++*nat
++-p tcp -j REDIRECT --to-ports 42;=;OK
++-p udp -j REDIRECT --to-ports 42-1234;=;OK
++-p tcp -j REDIRECT --to-ports 42-1234 --random;=;OK
++-j REDIRECT --to-ports 42;;FAIL
+diff --git a/extensions/libipt_REJECT.t b/extensions/libipt_REJECT.t
+new file mode 100644
+index 0000000000000..5b26b1076b5b2
+--- /dev/null
++++ b/extensions/libipt_REJECT.t
+@@ -0,0 +1,9 @@
++:INPUT,FORWARD,OUTPUT
++-j REJECT;=;OK
++-j REJECT --reject-with icmp-net-unreachable;=;OK
++-j REJECT --reject-with icmp-host-unreachable;=;OK
++-j REJECT --reject-with icmp-port-unreachable;=;OK
++-j REJECT --reject-with icmp-proto-unreachable;=;OK
++-j REJECT --reject-with icmp-net-prohibited;=;OK
++-j REJECT --reject-with icmp-host-prohibited;=;OK
++-j REJECT --reject-with icmp-admin-prohibited;=;OK
+diff --git a/extensions/libipt_SNAT.t b/extensions/libipt_SNAT.t
+new file mode 100644
+index 0000000000000..186e1cb82c3f3
+--- /dev/null
++++ b/extensions/libipt_SNAT.t
+@@ -0,0 +1,11 @@
++:POSTROUTING
++*nat
++-j SNAT --to-source 1.1.1.1;=;OK
++-j SNAT --to-source 1.1.1.1-1.1.1.10;=;OK
++-j SNAT --to-source 1.1.1.1:1025-65535;;FAIL
++-j SNAT --to-source 1.1.1.1 --to-source 2.2.2.2;;FAIL
++-p tcp -j SNAT --to-source 1.1.1.1:1025-65535;=;OK
++-p tcp -j SNAT --to-source 1.1.1.1-1.1.1.10:1025-65535;=;OK
++-p tcp -j SNAT --to-source 1.1.1.1-1.1.1.10:1025-65536;;FAIL
++-p tcp -j SNAT --to-source 1.1.1.1-1.1.1.10:1025-65535 --to-source 2.2.2.2-2.2.2.20:1025-65535;;FAIL
++-j SNAT;;FAIL
+diff --git a/extensions/libipt_TTL.t b/extensions/libipt_TTL.t
+new file mode 100644
+index 0000000000000..36809792a4b92
+--- /dev/null
++++ b/extensions/libipt_TTL.t
+@@ -0,0 +1,10 @@
++:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j TTL --ttl-set 42;=;OK
++-j TTL --ttl-inc 1;=;OK
++-j TTL --ttl-dec 1;=;OK
++-j TTL --ttl-set 256;;FAIL
++-j TTL --ttl-inc 0;;FAIL
++-j TTL --ttl-dec 0;;FAIL
++-j TTL --ttl-dec 1 --ttl-inc 1;;FAIL
++-j TTL --ttl-set --ttl-inc 1;;FAIL
+diff --git a/extensions/libipt_ah.t b/extensions/libipt_ah.t
+new file mode 100644
+index 0000000000000..cd853865638e8
+--- /dev/null
++++ b/extensions/libipt_ah.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++-p ah -m ah --ahspi 0;=;OK
++-p ah -m ah --ahspi 4294967295;=;OK
++-p ah -m ah --ahspi 0:4294967295;-p ah -m ah;OK
++-p ah -m ah ! --ahspi 0;=;OK
++-p ah -m ah --ahspi -1;;FAIL
++-p ah -m ah --ahspi 4294967296;;FAIL
++-p ah -m ah --ahspi invalid;;FAIL
++-p ah -m ah --ahspi 0:invalid;;FAIL
++-m ah --ahspi 0;;FAIL
++-m ah --ahspi;;FAIL
++-m ah;;FAIL
++-p ah -m ah;=;OK
+diff --git a/extensions/libipt_icmp.t b/extensions/libipt_icmp.t
+new file mode 100644
+index 0000000000000..f4ba65c27f032
+--- /dev/null
++++ b/extensions/libipt_icmp.t
+@@ -0,0 +1,15 @@
++:INPUT,FORWARD,OUTPUT
++-p icmp -m icmp --icmp-type any;=;OK
++# output uses the number, better use the name?
++# ERROR: cannot find: iptables -I INPUT -p icmp -m icmp --icmp-type echo-reply
++# -p icmp -m icmp --icmp-type echo-reply;=;OK
++# output uses the number, better use the name?
++# ERROR: annot find: iptables -I INPUT -p icmp -m icmp --icmp-type destination-unreachable
++# -p icmp -m icmp --icmp-type destination-unreachable;=;OK
++# it does not acccept name/name, should we accept this?
++# ERROR: cannot load: iptables -A INPUT -p icmp -m icmp --icmp-type destination-unreachable/network-unreachable
++# -p icmp -m icmp --icmp-type destination-unreachable/network-unreachable;=;OK
++-m icmp;;FAIL
++# we accept "iptables -I INPUT -p tcp -m tcp", why not this below?
++# ERROR: cannot load: iptables -A INPUT -p icmp -m icmp
++# -p icmp -m icmp;=;OK
+diff --git a/extensions/libipt_realm.t b/extensions/libipt_realm.t
+new file mode 100644
+index 0000000000000..ca66640766983
+--- /dev/null
++++ b/extensions/libipt_realm.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-m realm --realm 0x1/0x2a;=;OK
++-m realm --realm 0x2a;=;OK
++-m realm;;FAIL
+diff --git a/extensions/libipt_ttl.t b/extensions/libipt_ttl.t
+new file mode 100644
+index 0000000000000..ebe5b3a21a268
+--- /dev/null
++++ b/extensions/libipt_ttl.t
+@@ -0,0 +1,15 @@
++:INPUT,FORWARD,OUTPUT
++-m ttl --ttl-eq 0;=;OK
++-m ttl --ttl-eq 255;=;OK
++-m ttl ! --ttl-eq 0;=;OK
++-m ttl ! --ttl-eq 255;=;OK
++-m ttl --ttl-gt 0;=;OK
++# not possible have anything greater than 255, TTL is 8-bit long
++# ERROR: should fail: iptables -A INPUT -m ttl --ttl-gt 255
++## -m ttl --ttl-gt 255;;FAIL
++# not possible have anything below 0
++# ERROR: should fail: iptables -A INPUT -m ttl --ttl-lt 0
++## -m ttl --ttl-lt 0;;FAIL
++-m ttl --ttl-eq 256;;FAIL
++-m ttl --ttl-eq -1;;FAIL
++-m ttl;;FAIL
+diff --git a/extensions/libxt_AUDIT.t b/extensions/libxt_AUDIT.t
+new file mode 100644
+index 0000000000000..97575b0eb1ce8
+--- /dev/null
++++ b/extensions/libxt_AUDIT.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-j AUDIT --type accept;=;OK
++-j AUDIT --type drop;=;OK
++-j AUDIT --type reject;=;OK
++-j AUDIT;;FAIL
++-j AUDIT --type wrong;;FAIL
+diff --git a/extensions/libxt_CHECKSUM.t b/extensions/libxt_CHECKSUM.t
+new file mode 100644
+index 0000000000000..9451ad86489b2
+--- /dev/null
++++ b/extensions/libxt_CHECKSUM.t
+@@ -0,0 +1,4 @@
++:PREROUTING,FORWARD,POSTROUTING
++*mangle
++-j CHECKSUM --checksum-fill;=;OK
++-j CHECKSUM;;FAIL
+diff --git a/extensions/libxt_CLASSIFY.t b/extensions/libxt_CLASSIFY.t
+new file mode 100644
+index 0000000000000..7b3ddbf75039e
+--- /dev/null
++++ b/extensions/libxt_CLASSIFY.t
+@@ -0,0 +1,9 @@
++:FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j CLASSIFY --set-class 0000:ffff;=;OK
++# maximum handle accepted by tc is 0xffff
++# ERROR : should fail: iptables -A FORWARD -t mangle -j CLASSIFY --set-class  0000:ffffffff
++# -j CLASSIFY --set-class 0000:ffffffff;;FAIL
++# ERROR: should fail: iptables -A FORWARD -t mangle -j CLASSIFY --set-class 1:-1
++# -j CLASSIFY --set-class 1:-1;;FAIL
++-j CLASSIFY;;FAIL
+diff --git a/extensions/libxt_CONNMARK.t b/extensions/libxt_CONNMARK.t
+new file mode 100644
+index 0000000000000..79a838fefaa14
+--- /dev/null
++++ b/extensions/libxt_CONNMARK.t
+@@ -0,0 +1,7 @@
++:PREROUTING,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j CONNMARK --restore-mark;=;OK
++-j CONNMARK --save-mark;=;OK
++-j CONNMARK --save-mark --nfmask 0xfffffff --ctmask 0xffffffff;-j CONNMARK --save-mark;OK
++-j CONNMARK --restore-mark --nfmask 0xfffffff --ctmask 0xffffffff;-j CONNMARK --restore-mark;OK
++-j CONNMARK;;FAIL
+diff --git a/extensions/libxt_CONNSECMARK.t b/extensions/libxt_CONNSECMARK.t
+new file mode 100644
+index 0000000000000..2751b255cd273
+--- /dev/null
++++ b/extensions/libxt_CONNSECMARK.t
+@@ -0,0 +1,5 @@
++:PREROUTING,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j CONNSECMARK --restore;=;OK
++-j CONNSECMARK --save;=;OK
++-j CONNSECMARK;;FAIL
+diff --git a/extensions/libxt_CT.t b/extensions/libxt_CT.t
+new file mode 100644
+index 0000000000000..3c28534e8169e
+--- /dev/null
++++ b/extensions/libxt_CT.t
+@@ -0,0 +1,20 @@
++:PREROUTING,OUTPUT
++*raw
++-j CT --notrack;=;OK
++-j CT --ctevents new,related,destroy,reply,assured,protoinfo,helper,mark;=;OK
++-j CT --expevents new;=;OK
++# ERROR: cannot find: iptables -I PREROUTING -t raw -j CT --zone 0
++# -j CT --zone 0;=;OK
++-j CT --zone 65535;=;OK
++-j CT --zone 65536;;FAIL
++-j CT --zone -1;;FAIL
++# ERROR: should fail: iptables -A PREROUTING -t raw -j CT
++# -j CT;;FAIL
++@nfct timeout add test inet tcp ESTABLISHED 100
++# cannot load: iptables -A PREROUTING -t raw -j CT --timeout test
++# -j CT --timeout test;=;OK
++@nfct timeout del test
++@nfct helper add rpc inet tcp
++# cannot load: iptables -A PREROUTING -t raw -j CT --helper rpc
++# -j CT --helper rpc;=;OK
++@nfct helper del rpc
+diff --git a/extensions/libxt_DSCP.t b/extensions/libxt_DSCP.t
+new file mode 100644
+index 0000000000000..fcc55986dbcd7
+--- /dev/null
++++ b/extensions/libxt_DSCP.t
+@@ -0,0 +1,11 @@
++:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j DSCP --set-dscp 0;=;OK
++-j DSCP --set-dscp 0x3f;=;OK
++-j DSCP --set-dscp -1;;FAIL
++-j DSCP --set-dscp 0x40;;FAIL
++-j DSCP --set-dscp 0x3f --set-dscp-class CS0;;FAIL
++-j DSCP --set-dscp-class CS0;-j DSCP --set-dscp 0x00;OK
++-j DSCP --set-dscp-class BE;-j DSCP --set-dscp 0x00;OK
++-j DSCP --set-dscp-class EF;-j DSCP --set-dscp 0x2e;OK
++-j DSCP;;FAIL
+diff --git a/extensions/libxt_HMARK.t b/extensions/libxt_HMARK.t
+new file mode 100644
+index 0000000000000..3bcf1dada5d02
+--- /dev/null
++++ b/extensions/libxt_HMARK.t
+@@ -0,0 +1,8 @@
++:INPUT,FORWARD,OUTPUT
++-j HMARK;;FAIL
++-j HMARK --hmark-src-prefix 32 --hmark-rnd 0x00000004 --hmark-mod 42;=;OK
++-j HMARK --hmark-src-prefix 32 --hmark-dst-prefix 32 --hmark-sport-mask 0xffff --hmark-dport-mask 0xffff --hmark-proto-mask 0xffff --hmark-rnd 0x00000004 --hmark-mod 42 --hmark-offset 1 --hmark-tuple ct;=;OK
++-j HMARK --hmark-src-prefix 32 --hmark-dst-prefix 32 --hmark-spi-mask 0x00000004 --hmark-proto-mask 0xffff --hmark-rnd 0x00000004 --hmark-mod 42 --hmark-offset 1 --hmark-tuple ct;=;OK
++-j HMARK --hmark-src-prefix 1 --hmark-dst-prefix 2 --hmark-sport-mask 0x0003 --hmark-dport-mask 0x0004 --hmark-proto-mask 0x05 --hmark-rnd 0x00000004 --hmark-mod 42 --hmark-offset 1 --hmark-tuple ct;=;OK
++# cannot mix in spi mask:
++-j HMARK --hmark-src-prefix 32 --hmark-dst-prefix 32 --hmark-sport-mask 0xffff --hmark-dport-mask 0xffff --hmark-proto-mask 0xffff --hmark-rnd 0x00000004 --hmark-mod 42 --hmark-offset 1 --hmark-tuple ct --hmark-spi-mask 4;;FAIL
+diff --git a/extensions/libxt_IDLETIMER.t b/extensions/libxt_IDLETIMER.t
+new file mode 100644
+index 0000000000000..6afd92c1a1c88
+--- /dev/null
++++ b/extensions/libxt_IDLETIMER.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-j IDLETIMER --timeout;;FAIL
++-j IDLETIMER --timeout 42;;FAIL
++-j IDLETIMER --timeout 42 --label foo;=;OK
+diff --git a/extensions/libxt_LED.t b/extensions/libxt_LED.t
+new file mode 100644
+index 0000000000000..1f6705f464b1d
+--- /dev/null
++++ b/extensions/libxt_LED.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-j LED;;FAIL
++-j LED --led-trigger-id "foo";=;OK
++-j LED --led-trigger-id "foo" --led-delay 42 --led-always-blink;=;OK
+diff --git a/extensions/libxt_MARK.t b/extensions/libxt_MARK.t
+new file mode 100644
+index 0000000000000..9d1aa7d7d58a4
+--- /dev/null
++++ b/extensions/libxt_MARK.t
+@@ -0,0 +1,7 @@
++:INPUT,FORWARD,OUTPUT
++-j MARK --set-xmark 0xfeedcafe/0xfeedcafe;=;OK
++-j MARK --set-xmark 0;=;OK
++-j MARK --set-xmark 4294967295;-j MARK --set-xmark 0xffffffff;OK
++-j MARK --set-xmark 4294967296;;FAIL
++-j MARK --set-xmark -1;;FAIL
++-j MARK;;FAIL
+diff --git a/extensions/libxt_NFLOG.t b/extensions/libxt_NFLOG.t
+new file mode 100644
+index 0000000000000..933fa22160e59
+--- /dev/null
++++ b/extensions/libxt_NFLOG.t
+@@ -0,0 +1,24 @@
++:INPUT,FORWARD,OUTPUT
++-j NFLOG --nflog-group 1;=;OK
++-j NFLOG --nflog-group 65535;=;OK
++-j NFLOG --nflog-group 65536;;FAIL
++-j NFLOG --nflog-group 0;-j NFLOG;OK
++-j NFLOG --nflog-range 1;=;OK
++-j NFLOG --nflog-range 4294967295;=;OK
++-j NFLOG --nflog-range 4294967296;;FAIL
++-j NFLOG --nflog-range -1;;FAIL
++-j NFLOG --nflog-size 0;=;OK
++-j NFLOG --nflog-size 1;=;OK
++-j NFLOG --nflog-size 4294967295;=;OK
++-j NFLOG --nflog-size 4294967296;;FAIL
++-j NFLOG --nflog-size -1;;FAIL
++# ERROR: cannot find: iptables -I INPUT -j NFLOG --nflog-prefix  xxxxxx [...]
++# -j NFLOG --nflog-prefix xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;=;OK
++# ERROR: should fail: iptables -A INPUT -j NFLOG --nflog-prefix  xxxxxxx [...]
++#  -j NFLOG --nflog-prefix xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;;FAIL
++-j NFLOG --nflog-threshold 1;=;OK
++# ERROR: line 13 (should fail: iptables -A INPUT -j NFLOG --nflog-threshold 0
++# -j NFLOG --nflog-threshold 0;;FAIL
++-j NFLOG --nflog-threshold 65535;=;OK
++-j NFLOG --nflog-threshold 65536;;FAIL
++-j NFLOG;=;OK
+diff --git a/extensions/libxt_NFQUEUE.t b/extensions/libxt_NFQUEUE.t
+new file mode 100644
+index 0000000000000..b51b19fd435f7
+--- /dev/null
++++ b/extensions/libxt_NFQUEUE.t
+@@ -0,0 +1,16 @@
++:INPUT,FORWARD,OUTPUT
++-j NFQUEUE;=;OK
++-j NFQUEUE --queue-num 0;=;OK
++-j NFQUEUE --queue-num 65535;=;OK
++-j NFQUEUE --queue-num 65536;;FAIL
++-j NFQUEUE --queue-num -1;;FAIL
++# it says "NFQUEUE: number of total queues is 0", overflow in NFQUEUE_parse_v1?
++# ERROR: cannot load: iptables -A INPUT -j NFQUEUE --queue-balance 0:65535
++# -j NFQUEUE --queue-balance 0:65535;=;OK
++-j NFQUEUE --queue-balance 0:65536;;FAIL
++-j NFQUEUE --queue-balance -1:65535;;FAIL
++-j NFQUEUE --queue-num 10 --queue-bypass;=;OK
++-j NFQUEUE --queue-balance 0:6 --queue-cpu-fanout --queue-bypass;-j NFQUEUE --queue-balance 0:6 --queue-bypass --queue-cpu-fanout;OK
++-j NFQUEUE --queue-bypass --queue-balance 0:6 --queue-cpu-fanout;-j NFQUEUE --queue-balance 0:6 --queue-bypass --queue-cpu-fanout;OK
++-j NFQUEUE --queue-balance 0:6 --queue-bypass;=;OK
++-j NFQUEUE --queue-bypass;-j NFQUEUE --queue-num 0 --queue-bypass;OK
+diff --git a/extensions/libxt_NOTRACK.t b/extensions/libxt_NOTRACK.t
+new file mode 100644
+index 0000000000000..585be82d56ecb
+--- /dev/null
++++ b/extensions/libxt_NOTRACK.t
+@@ -0,0 +1,4 @@
++:PREROUTING,OUTPUT
++*raw
++# ERROR: cannot find: iptables -I PREROUTING -t raw -j NOTRACK
++#-j NOTRACK;=;OK
+diff --git a/extensions/libxt_RATEEST.t b/extensions/libxt_RATEEST.t
+new file mode 100644
+index 0000000000000..c2b6bb34e7aa2
+--- /dev/null
++++ b/extensions/libxt_RATEEST.t
+@@ -0,0 +1,2 @@
++:INPUT,FORWARD,OUTPUT
++-j RATEEST --rateest-name RE1 --rateest-interval 250.0ms --rateest-ewmalog 500.0ms;=;OK
+diff --git a/extensions/libxt_SET.t b/extensions/libxt_SET.t
+new file mode 100644
+index 0000000000000..30c27ca319176
+--- /dev/null
++++ b/extensions/libxt_SET.t
+@@ -0,0 +1,3 @@
++:INPUT,FORWARD,OUTPUT
++# fails: foo does not exist
++-j SET --add-set foo src,dst;;FAIL
+diff --git a/extensions/libxt_SYNPROXY.t b/extensions/libxt_SYNPROXY.t
+new file mode 100644
+index 0000000000000..dd8b0e769f568
+--- /dev/null
++++ b/extensions/libxt_SYNPROXY.t
+@@ -0,0 +1,3 @@
++:INPUT,FORWARD
++-j SYNPROXY --sack-perm --timestamp --mss 1460 --wscale 9;;FAIL
++-p tcp -m tcp --dport 42 -m conntrack --ctstate INVALID,UNTRACKED -j SYNPROXY --sack-perm --timestamp --wscale 9 --mss 1460;=;OK
+diff --git a/extensions/libxt_TCPMSS.t b/extensions/libxt_TCPMSS.t
+new file mode 100644
+index 0000000000000..553a3452e4876
+--- /dev/null
++++ b/extensions/libxt_TCPMSS.t
+@@ -0,0 +1,6 @@
++:FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j TCPMSS;;FAIL
++-p tcp -j TCPMSS --set-mss 42;;FAIL
++-p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j TCPMSS --set-mss 42;=;OK
++-p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j TCPMSS --clamp-mss-to-pmtu;=;OK
+diff --git a/extensions/libxt_TCPOPTSTRIP.t b/extensions/libxt_TCPOPTSTRIP.t
+new file mode 100644
+index 0000000000000..b5c7a109e5b91
+--- /dev/null
++++ b/extensions/libxt_TCPOPTSTRIP.t
+@@ -0,0 +1,8 @@
++:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j TCPOPTSTRIP;;FAIL
++-p tcp -j TCPOPTSTRIP;=;OK
++-p tcp -j TCPOPTSTRIP --strip-options 2,3,4,5,6,7;=;OK
++-p tcp -j TCPOPTSTRIP --strip-options 0;;FAIL
++-p tcp -j TCPOPTSTRIP --strip-options 1;;FAIL
++-p tcp -j TCPOPTSTRIP --strip-options 1,2;;FAIL
+diff --git a/extensions/libxt_TEE.t b/extensions/libxt_TEE.t
+new file mode 100644
+index 0000000000000..ce8b103e0dc24
+--- /dev/null
++++ b/extensions/libxt_TEE.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-j TEE --gateway 1.1.1.1;=;OK
++-j TEE ! --gateway 1.1.1.1;;FAIL
++-j TEE;;FAIL
+diff --git a/extensions/libxt_TOS.t b/extensions/libxt_TOS.t
+new file mode 100644
+index 0000000000000..ae8531cc582e2
+--- /dev/null
++++ b/extensions/libxt_TOS.t
+@@ -0,0 +1,16 @@
++:PREROUTING,INPUT,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-j TOS --set-tos 0x1f;=;OK
++-j TOS --set-tos 0x1f/0x1f;=;OK
++# maximum TOS is 0x1f (5 bits)
++# ERROR: should fail: iptables -A PREROUTING -t mangle -j TOS --set-tos 0xff
++# -j TOS --set-tos 0xff;;FAIL
++-j TOS --set-tos Minimize-Delay;-j TOS --set-tos 0x10;OK
++-j TOS --set-tos Maximize-Throughput;-j TOS --set-tos 0x08;OK
++-j TOS --set-tos Maximize-Reliability;-j TOS --set-tos 0x04;OK
++-j TOS --set-tos Minimize-Cost;-j TOS --set-tos 0x02;OK
++-j TOS --set-tos Normal-Service;-j TOS --set-tos 0x00;OK
++-j TOS --and-tos 0x12;-j TOS --set-tos 0x00/0xed;OK
++-j TOS --or-tos 0x12;-j TOS --set-tos 0x12/0x12;OK
++-j TOS --xor-tos 0x12;-j TOS --set-tos 0x12/0x00;OK
++-j TOS;;FAIL
+diff --git a/extensions/libxt_TPROXY.t b/extensions/libxt_TPROXY.t
+new file mode 100644
+index 0000000000000..12f82b1fae76a
+--- /dev/null
++++ b/extensions/libxt_TPROXY.t
+@@ -0,0 +1,5 @@
++:PREROUTING
++*mangle
++-j TPROXY --on-port 12345 --on-ip 10.0.0.1 --tproxy-mark 0x23/0xff;;FAIL
++-p udp -j TPROXY --on-port 12345 --on-ip 10.0.0.1 --tproxy-mark 0x23/0xff;=;OK
++-p tcp -m tcp --dport 2342 -j TPROXY --on-port 12345 --on-ip 10.0.0.1 --tproxy-mark 0x23/0xff;=;OK
+diff --git a/extensions/libxt_TRACE.t b/extensions/libxt_TRACE.t
+new file mode 100644
+index 0000000000000..cadb7330174e5
+--- /dev/null
++++ b/extensions/libxt_TRACE.t
+@@ -0,0 +1,3 @@
++:PREROUTING,OUTPUT
++*raw
++-j TRACE;=;OK
+diff --git a/extensions/libxt_addrtype.t b/extensions/libxt_addrtype.t
+new file mode 100644
+index 0000000000000..390a63f0fa232
+--- /dev/null
++++ b/extensions/libxt_addrtype.t
+@@ -0,0 +1,17 @@
++:INPUT,FORWARD,OUTPUT
++-m addrtype;;FAIL
++-m addrtype --src-type wrong;;FAIL
++-m addrtype --src-type UNSPEC;=;OK
++-m addrtype --dst-type UNSPEC;=;OK
++-m addrtype --src-type LOCAL --dst-type LOCAL;=;OK
++-m addrtype --dst-type UNSPEC;=;OK
++-m addrtype --limit-iface-in;;FAIL
++-m addrtype --limit-iface-out;;FAIL
++-m addrtype --limit-iface-in --limit-iface-out;;FAIL
++-m addrtype --src-type LOCAL --limit-iface-in --limit-iface-out;;FAIL
++:INPUT
++-m addrtype --src-type LOCAL --limit-iface-in;=;OK
++-m addrtype --dst-type LOCAL --limit-iface-in;=;OK
++:OUTPUT
++-m addrtype --src-type LOCAL --limit-iface-out;=;OK
++-m addrtype --dst-type LOCAL --limit-iface-out;=;OK
+diff --git a/extensions/libxt_bpf.t b/extensions/libxt_bpf.t
+new file mode 100644
+index 0000000000000..80361ad52e713
+--- /dev/null
++++ b/extensions/libxt_bpf.t
+@@ -0,0 +1,2 @@
++:INPUT,FORWARD,OUTPUT
++-m bpf --bytecode "4,48 0 0 9,21 0 1 6,6 0 0 1,6 0 0 0";=;OK
+diff --git a/extensions/libxt_cgroup.t b/extensions/libxt_cgroup.t
+new file mode 100644
+index 0000000000000..72c8e37708e95
+--- /dev/null
++++ b/extensions/libxt_cgroup.t
+@@ -0,0 +1,8 @@
++:INPUT,OUTPUT,POSTROUTING
++*mangle
++-m cgroup --cgroup 1;=;OK
++-m cgroup ! --cgroup 1;=;OK
++-m cgroup --path "/";=;OK
++-m cgroup ! --path "/";=;OK
++-m cgroup --cgroup 1 --path "/";;FAIL
++-m cgroup ;;FAIL
+diff --git a/extensions/libxt_cluster.t b/extensions/libxt_cluster.t
+new file mode 100644
+index 0000000000000..ac608244833f2
+--- /dev/null
++++ b/extensions/libxt_cluster.t
+@@ -0,0 +1,10 @@
++:PREROUTING,FORWARD,POSTROUTING
++*mangle
++-m cluster;;FAIL
++-m cluster --cluster-total-nodes 3;;FAIL
++-m cluster --cluster-total-nodes 2 --cluster-local-node 2;;FAIL
++-m cluster --cluster-total-nodes 2 --cluster-local-node 3 --cluster-hash-seed;;FAIL
++#
++# outputs --cluster-local-nodemask instead of --cluster-local-node
++#
++-m cluster --cluster-total-nodes 2 --cluster-local-node 2 --cluster-hash-seed 0xfeedcafe;-m cluster --cluster-local-nodemask 0x00000002 --cluster-total-nodes 2 --cluster-hash-seed 0xfeedcafe;OK
+diff --git a/extensions/libxt_comment.t b/extensions/libxt_comment.t
+new file mode 100644
+index 0000000000000..f12cd66841e7f
+--- /dev/null
++++ b/extensions/libxt_comment.t
+@@ -0,0 +1,12 @@
++:INPUT,FORWARD,OUTPUT
++-m comment;;FAIL
++-m comment --comment;;FAIL
++#
++# it fails with 256 characters
++#
++# should fail: iptables -A INPUT -m comment --comment xxxxxxxxxxxxxxxxx [....]
++# -m comment --comment xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;;FAIL
++#
++# success with 255 characters
++#
++-m comment --comment xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx;=;OK
+diff --git a/extensions/libxt_connbytes.t b/extensions/libxt_connbytes.t
+new file mode 100644
+index 0000000000000..6b24e266c1a04
+--- /dev/null
++++ b/extensions/libxt_connbytes.t
+@@ -0,0 +1,21 @@
++:INPUT,FORWARD,OUTPUT
++-m connbytes --connbytes 0:1000 --connbytes-mode packets --connbytes-dir original;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode packets --connbytes-dir reply;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode packets --connbytes-dir both;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode bytes --connbytes-dir original;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode bytes --connbytes-dir reply;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode bytes --connbytes-dir both;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode avgpkt --connbytes-dir original;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode avgpkt --connbytes-dir reply;=;OK
++-m connbytes --connbytes 0:1000 --connbytes-mode avgpkt --connbytes-dir both;=;OK
++-m connbytes --connbytes -1:0 --connbytes-mode packets --connbytes-dir original;;FAIL
++-m connbytes --connbytes 0:-1 --connbytes-mode packets --connbytes-dir original;;FAIL
++# ERROR: cannot find: iptables -I INPUT -m connbytes --connbytes 0:18446744073709551615 --connbytes-mode avgpkt --connbytes-dir both
++# -m connbytes --connbytes 0:18446744073709551615 --connbytes-mode avgpkt --connbytes-dir both;=;OK
++-m connbytes --connbytes 0:18446744073709551616 --connbytes-mode avgpkt --connbytes-dir both;;FAIL
++-m connbytes --connbytes 0:1000 --connbytes-mode wrong --connbytes-dir both;;FAIL
++-m connbytes --connbytes 0:1000 --connbytes-dir original;;FAIL
++-m connbytes --connbytes 0:1000 --connbytes-mode packets;;FAIL
++-m connbytes --connbytes-dir original;;FAIL
++-m connbytes --connbytes 0:1000;;FAIL
++-m connbytes;;FAIL
+diff --git a/extensions/libxt_connlabel.t b/extensions/libxt_connlabel.t
+new file mode 100644
+index 0000000000000..aad1032b5a8bb
+--- /dev/null
++++ b/extensions/libxt_connlabel.t
+@@ -0,0 +1,18 @@
++:INPUT,FORWARD,OUTPUT
++# Backup the connlabel.conf, then add some label maps for test
++@[ -f /etc/xtables/connlabel.conf ] && mv /etc/xtables/connlabel.conf /tmp/connlabel.conf.bak
++@mkdir -p /etc/xtables
++@echo "40 bit40" > /etc/xtables/connlabel.conf
++@echo "41 bit41" >> /etc/xtables/connlabel.conf
++@echo "128 bit128" >> /etc/xtables/connlabel.conf
++-m connlabel --label "bit40";=;OK
++-m connlabel ! --label "bit40";=;OK
++-m connlabel --label "bit41" --set;=;OK
++-m connlabel ! --label "bit41" --set;=;OK
++-m connlabel --label "bit128";;FAIL
++@echo > /etc/xtables/connlabel.conf
++-m connlabel --label "abc";;FAIL
++@rm -f /etc/xtables/connlabel.conf
++-m connlabel --label "abc";;FAIL
++# Restore the original connlabel.conf
++@[ -f /tmp/connlabel.conf.bak ] && mv /tmp/connlabel.conf.bak /etc/xtables/connlabel.conf
+diff --git a/extensions/libxt_connlimit.t b/extensions/libxt_connlimit.t
+new file mode 100644
+index 0000000000000..c7ea61e95fbc8
+--- /dev/null
++++ b/extensions/libxt_connlimit.t
+@@ -0,0 +1,16 @@
++:INPUT,FORWARD,OUTPUT
++-m connlimit --connlimit-upto 0;=;OK
++-m connlimit --connlimit-upto 4294967295;=;OK
++-m connlimit --connlimit-upto 4294967296;;FAIL
++-m connlimit --connlimit-upto -1;;FAIL
++-m connlimit --connlimit-above 0;=;OK
++-m connlimit --connlimit-above 4294967295;=;OK
++-m connlimit --connlimit-above 4294967296;;FAIL
++-m connlimit --connlimit-above -1;;FAIL
++-m connlimit --connlimit-upto 1 --conlimit-above 1;;FAIL
++-m connlimit --connlimit-above 10 --connlimit-saddr;-m connlimit --connlimit-above 10 --connlimit-mask 32 --connlimit-saddr;OK
++-m connlimit --connlimit-above 10 --connlimit-daddr;-m connlimit --connlimit-above 10 --connlimit-mask 32 --connlimit-daddr;OK
++-m connlimit --connlimit-above 10 --connlimit-saddr --connlimit-daddr;;FAIL
++-m connlimit --connlimit-above 10 --connlimit-mask 32 --connlimit-saddr;=;OK
++-m connlimit --connlimit-above 10 --connlimit-mask 32 --connlimit-daddr;=;OK
++-m connlimit;;FAIL
+diff --git a/extensions/libxt_connmark.t b/extensions/libxt_connmark.t
+new file mode 100644
+index 0000000000000..4dd7d9af265a5
+--- /dev/null
++++ b/extensions/libxt_connmark.t
+@@ -0,0 +1,9 @@
++:PREROUTING,FORWARD,OUTPUT,POSTROUTING
++*mangle
++-m connmark --mark 0xffffffff;=;OK
++-m connmark --mark 0xffffffff/0xffffffff;-m connmark --mark 0xffffffff;OK
++-m connmark --mark 0xffffffff/0;=;OK
++-m connmark --mark 0/0xffffffff;-m connmark --mark 0;OK
++-m connmark --mark -1;;FAIL
++-m connmark --mark 0xfffffffff;;FAIL
++-m connmark;;FAIL
+diff --git a/extensions/libxt_conntrack.t b/extensions/libxt_conntrack.t
+new file mode 100644
+index 0000000000000..db53147532afd
+--- /dev/null
++++ b/extensions/libxt_conntrack.t
+@@ -0,0 +1,27 @@
++:INPUT,FORWARD,OUTPUT
++-m conntrack --ctstate NEW;=;OK
++-m conntrack --ctstate NEW,ESTABLISHED;=;OK
++-m conntrack --ctstate NEW,RELATED,ESTABLISHED;=;OK
++-m conntrack --ctstate INVALID;=;OK
++-m conntrack --ctstate UNTRACKED;=;OK
++-m conntrack --ctstate SNAT,DNAT;=;OK
++-m conntrack --ctstate wrong;;FAIL
++# should we convert this to output "tcp" instead of 6?
++-m conntrack --ctproto tcp;-m conntrack --ctproto 6;OK
++-m conntrack --ctorigsrc 1.1.1.1;=;OK
++-m conntrack --ctorigdst 1.1.1.1;=;OK
++-m conntrack --ctreplsrc 1.1.1.1;=;OK
++-m conntrack --ctrepldst 1.1.1.1;=;OK
++-m conntrack --ctexpire 0;=;OK
++-m conntrack --ctexpire 4294967295;=;OK
++-m conntrack --ctexpire 0:4294967295;=;OK
++-m conntrack --ctexpire 42949672956;;FAIL
++-m conntrack --ctexpire -1;;FAIL
++-m conntrack --ctdir ORIGINAL;=;OK
++-m conntrack --ctdir REPLY;=;OK
++-m conntrack --ctstatus NONE;=;OK
++-m conntrack --ctstatus CONFIRMED;=;OK
++-m conntrack --ctstatus ASSURED;=;OK
++-m conntrack --ctstatus EXPECTED;=;OK
++-m conntrack --ctstatus SEEN_REPLY;=;OK
++-m conntrack;;FAIL
+diff --git a/extensions/libxt_cpu.t b/extensions/libxt_cpu.t
+new file mode 100644
+index 0000000000000..f5adb45db7424
+--- /dev/null
++++ b/extensions/libxt_cpu.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m cpu --cpu 0;=;OK
++-m cpu ! --cpu 0;=;OK
++-m cpu --cpu 4294967295;=;OK
++-m cpu --cpu 4294967296;;FAIL
++-m cpu;;FAIL
+diff --git a/extensions/libxt_dccp.t b/extensions/libxt_dccp.t
+new file mode 100644
+index 0000000000000..f60b480fb6fc7
+--- /dev/null
++++ b/extensions/libxt_dccp.t
+@@ -0,0 +1,30 @@
++:INPUT,FORWARD,OUTPUT
++-p dccp -m dccp --sport 1;=;OK
++-p dccp -m dccp --sport 65535;=;OK
++-p dccp -m dccp --dport 1;=;OK
++-p dccp -m dccp --dport 65535;=;OK
++-p dccp -m dccp --sport 1:1023;=;OK
++-p dccp -m dccp --sport 1024:65535;=;OK
++-p dccp -m dccp --sport 1024:;-p dccp -m dccp --sport 1024:65535;OK
++-p dccp -m dccp ! --sport 1;=;OK
++-p dccp -m dccp ! --sport 65535;=;OK
++-p dccp -m dccp ! --dport 1;=;OK
++-p dccp -m dccp ! --dport 65535;=;OK
++-p dccp -m dccp --sport 1 --dport 65535;=;OK
++-p dccp -m dccp --sport 65535 --dport 1;=;OK
++-p dccp -m dccp ! --sport 1 --dport 65535;=;OK
++-p dccp -m dccp ! --sport 65535 --dport 1;=;OK
++# ERROR: should fail: iptables -A INPUT -p dccp -m dccp --sport 65536
++# -p dccp -m dccp --sport 65536;;FAIL
++-p dccp -m dccp --sport -1;;FAIL
++-p dccp -m dccp --dport -1;;FAIL
++-p dccp -m dccp --dccp-types REQUEST,RESPONSE,DATA,ACK,DATAACK,CLOSEREQ,CLOSE,RESET,SYNC,SYNCACK,INVALID;=;OK
++-p dccp -m dccp ! --dccp-types REQUEST,RESPONSE,DATA,ACK,DATAACK,CLOSEREQ,CLOSE,RESET,SYNC,SYNCACK,INVALID;=;OK
++# DCCP option 0 is valid, see http://tools.ietf.org/html/rfc4340#page-29
++# ERROR: cannot load: iptables -A INPUT -p dccp -m dccp --dccp-option 0
++#-p dccp -m dccp --dccp-option 0;=;OK
++-p dccp -m dccp --dccp-option 255;=;OK
++-p dccp -m dccp --dccp-option 256;;FAIL
++-p dccp -m dccp --dccp-option -1;;FAIL
++# should we accept this below?
++-p dccp -m dccp;=;OK
+diff --git a/extensions/libxt_dscp.t b/extensions/libxt_dscp.t
+new file mode 100644
+index 0000000000000..38d7f04e18698
+--- /dev/null
++++ b/extensions/libxt_dscp.t
+@@ -0,0 +1,10 @@
++:INPUT,FORWARD,OUTPUT
++-m dscp --dscp 0;=;OK
++-m dscp --dscp 0x3f;=;OK
++-m dscp --dscp -1;;FAIL
++-m dscp --dscp 0x40;;FAIL
++-m dscp --dscp 0x3f --dscp-class CS0;;FAIL
++-m dscp --dscp-class CS0;-m dscp --dscp 0x00;OK
++-m dscp --dscp-class BE;-m dscp --dscp 0x00;OK
++-m dscp --dscp-class EF;-m dscp --dscp 0x2e;OK
++-m dscp;;FAIL
+diff --git a/extensions/libxt_ecn.t b/extensions/libxt_ecn.t
+new file mode 100644
+index 0000000000000..b32aea306dcae
+--- /dev/null
++++ b/extensions/libxt_ecn.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD,OUTPUT
++-m ecn --ecn-tcp-cwr;;FAIL
++-p tcp -m ecn --ecn-tcp-cwr;=;OK
++-p tcp -m ecn --ecn-tcp-ece --ecn-tcp-cwr --ecn-ip-ect 2;=;OK
++-p tcp -m ecn ! --ecn-tcp-ece ! --ecn-tcp-cwr ! --ecn-ip-ect 2;=;OK
+diff --git a/extensions/libxt_esp.t b/extensions/libxt_esp.t
+new file mode 100644
+index 0000000000000..92c5779f860f1
+--- /dev/null
++++ b/extensions/libxt_esp.t
+@@ -0,0 +1,8 @@
++:INPUT,FORWARD,OUTPUT
++-p esp -m esp --espspi 0;=;OK
++-p esp -m esp --espspi :32;-p esp -m esp --espspi 0:32;OK
++-p esp -m esp --espspi 0:4294967295;-p esp -m esp;OK
++-p esp -m esp ! --espspi 0:4294967294;=;OK
++-p esp -m esp --espspi -1;;FAIL
++-p esp -m esp;=;OK
++-m esp;;FAIL
+diff --git a/extensions/libxt_hashlimit.t b/extensions/libxt_hashlimit.t
+new file mode 100644
+index 0000000000000..ccd0d1e6a2a1a
+--- /dev/null
++++ b/extensions/libxt_hashlimit.t
+@@ -0,0 +1,33 @@
++:INPUT,FORWARD,OUTPUT
++-m hashlimit --hashlimit-above 1/sec --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-above 1000000/sec --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-above 1/min --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-above 1/hour --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++# kernel says "xt_hashlimit: overflow, try lower: 864000000/5"
++-m hashlimit --hashlimit-above 1/day --hashlimit-burst 5 --hashlimit-name mini1;;FAIL
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-upto 1000000/sec --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-upto 1/min --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-upto 1/hour --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++# kernel says "xt_hashlimit: overflow, try lower: 864000000/5"
++-m hashlimit --hashlimit-upto 1/day --hashlimit-burst 5 --hashlimit-name mini1;;FAIL
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 1 --hashlimit-name mini1 --hashlimit-htable-expire 2000;=;OK
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 1 --hashlimit-mode srcip --hashlimit-name mini1 --hashlimit-htable-expire 2000;=;OK
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 1 --hashlimit-mode dstip --hashlimit-name mini1 --hashlimit-htable-expire 2000;=;OK
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 1 --hashlimit-mode dstip --hashlimit-name mini1 --hashlimit-htable-max 2000 --hashlimit-htable-expire 2000;=;OK
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 1 --hashlimit-mode dstip --hashlimit-name mini1 --hashlimit-htable-max 2000 --hashlimit-htable-gcinterval 60000 --hashlimit-htable-expire 2000;=;OK
++-m hashlimit --hashlimit-upto 1/sec --hashlimit-name mini1;-m hashlimit --hashlimit-upto 1/sec --hashlimit-burst 5 --hashlimit-name mini1;OK
++-m hashlimit --hashlimit-upto 4kb/s --hashlimit-burst 400kb --hashlimit-name mini5;=;OK
++-m hashlimit --hashlimit-upto 10mb/s --hashlimit-name mini6;=;OK
++-m hashlimit --hashlimit-upto 123456b/s --hashlimit-burst 1mb --hashlimit-name mini7;=;OK
++# should work, it says "iptables v1.4.15: burst cannot be smaller than 96b"
++# ERROR: cannot load: iptables -A INPUT -m hashlimit --hashlimit-upto 96b/s --hashlimit-burst 5 --hashlimit-name mini1
++# -m hashlimit --hashlimit-upto 96b/s --hashlimit-burst 5 --hashlimit-name mini1;=;OK
++-m hashlimit --hashlimit-name mini1;;FAIL
++-m hashlimit --hashlimit-upto 1/sec;;FAIL
++-m hashlimit;;FAIL
++-m hashlimit --hashlimit-upto 40/sec --hashlimit-burst 20 --hashlimit-mode srcip --hashlimit-name syn-flood;=;OK
++-m hashlimit --hashlimit-upto 40/sec --hashlimit-burst 20 --hashlimit-mode srcip --hashlimit-name rate1 --hashlimit-rate-match;=;OK
++-m hashlimit --hashlimit-upto 40mb/s --hashlimit-mode srcip --hashlimit-name rate2 --hashlimit-rate-match;=;OK
++-m hashlimit --hashlimit-upto 40/sec --hashlimit-burst 20 --hashlimit-mode srcip --hashlimit-name rate3 --hashlimit-rate-match --hashlimit-rate-interval 10;=;OK
++-m hashlimit --hashlimit-upto 40mb/s --hashlimit-mode srcip --hashlimit-name rate4 --hashlimit-rate-match --hashlimit-rate-interval 10;=;OK
+diff --git a/extensions/libxt_helper.t b/extensions/libxt_helper.t
+new file mode 100644
+index 0000000000000..8c8420ac5693a
+--- /dev/null
++++ b/extensions/libxt_helper.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m helper --helper ftp;=;OK
++# should be OK?
++# ERROR: should fail: iptables -A INPUT -m helper --helper wrong
++# -m helper --helper wrong;;FAIL
++-m helper;;FAIL
+diff --git a/extensions/libxt_ipcomp.t b/extensions/libxt_ipcomp.t
+new file mode 100644
+index 0000000000000..8546ba9ce416f
+--- /dev/null
++++ b/extensions/libxt_ipcomp.t
+@@ -0,0 +1,3 @@
++:INPUT,OUTPUT
++-p ipcomp -m ipcomp --ipcompspi 18 -j DROP;=;OK
++-p ipcomp -m ipcomp ! --ipcompspi 18 -j ACCEPT;=;OK
+diff --git a/extensions/libxt_iprange.t b/extensions/libxt_iprange.t
+new file mode 100644
+index 0000000000000..6fd98be656028
+--- /dev/null
++++ b/extensions/libxt_iprange.t
+@@ -0,0 +1,11 @@
++:INPUT,FORWARD,OUTPUT
++-m iprange --src-range 1.1.1.1-1.1.1.10;=;OK
++-m iprange ! --src-range 1.1.1.1-1.1.1.10;=;OK
++-m iprange --dst-range 1.1.1.1-1.1.1.10;=;OK
++-m iprange ! --dst-range 1.1.1.1-1.1.1.10;=;OK
++# it shows -A INPUT -m iprange --src-range 1.1.1.1-1.1.1.1, should we support this?
++# ERROR: should fail: iptables -A INPUT -m iprange --src-range 1.1.1.1
++# -m iprange --src-range 1.1.1.1;;FAIL
++# ERROR: should fail: iptables -A INPUT -m iprange --dst-range 1.1.1.1
++#-m iprange --dst-range 1.1.1.1;;FAIL
++-m iprange;;FAIL
+diff --git a/extensions/libxt_length.t b/extensions/libxt_length.t
+new file mode 100644
+index 0000000000000..0b6624ee069f6
+--- /dev/null
++++ b/extensions/libxt_length.t
+@@ -0,0 +1,10 @@
++:INPUT,FORWARD,OUTPUT
++-m length --length 1;=;OK
++-m length --length :2;-m length --length 0:2;OK
++-m length --length 0:3;=;OK
++-m length --length 4:;=;OK
++-m length --length 0:65535;=;OK
++-m length ! --length 0:65535;=;OK
++-m length --length 0:65536;;FAIL
++-m length --length -1:65535;;FAIL
++-m length;;FAIL
+diff --git a/extensions/libxt_limit.t b/extensions/libxt_limit.t
+new file mode 100644
+index 0000000000000..b0af6538a9c05
+--- /dev/null
++++ b/extensions/libxt_limit.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m limit --limit 1/sec;=;OK
++-m limit --limit 1/min;=;OK
++-m limit --limit 1000/hour;=;OK
++-m limit --limit 1000/day;=;OK
++-m limit --limit 1/sec --limit-burst 1;=;OK
+diff --git a/extensions/libxt_mac.t b/extensions/libxt_mac.t
+new file mode 100644
+index 0000000000000..a5ec81d80e23d
+--- /dev/null
++++ b/extensions/libxt_mac.t
+@@ -0,0 +1,5 @@
++:INPUT,FORWARD
++-m mac --mac-source 42:01:02:03:04:05;=;OK
++-m mac --mac-source 42:01:02:03:04;=;FAIL
++-m mac --mac-source 42:01:02:03:04:05:06;=;FAIL
++-m mac;;FAIL
+diff --git a/extensions/libxt_mark.t b/extensions/libxt_mark.t
+new file mode 100644
+index 0000000000000..7c005379f6d64
+--- /dev/null
++++ b/extensions/libxt_mark.t
+@@ -0,0 +1,7 @@
++:INPUT,FORWARD,OUTPUT
++-m mark --mark 0xfeedcafe/0xfeedcafe;=;OK
++-m mark --mark 0;=;OK
++-m mark --mark 4294967295;-m mark --mark 0xffffffff;OK
++-m mark --mark 4294967296;;FAIL
++-m mark --mark -1;;FAIL
++-m mark;;FAIL
+diff --git a/extensions/libxt_multiport.t b/extensions/libxt_multiport.t
+new file mode 100644
+index 0000000000000..e9b80a4ee376b
+--- /dev/null
++++ b/extensions/libxt_multiport.t
+@@ -0,0 +1,23 @@
++:INPUT,FORWARD,OUTPUT
++-p tcp -m multiport --sports 53,1024:65535;=;OK
++-p tcp -m multiport --dports 53,1024:65535;=;OK
++-p udp -m multiport --sports 53,1024:65535;=;OK
++-p udp -m multiport --dports 53,1024:65535;=;OK
++-p udp -m multiport --ports 53,1024:65535;=;OK
++-p udp -m multiport --ports 53,1024:65535;=;OK
++-p sctp -m multiport --sports 53,1024:65535;=;OK
++-p sctp -m multiport --dports 53,1024:65535;=;OK
++-p dccp -m multiport --sports 53,1024:65535;=;OK
++-p dccp -m multiport --dports 53,1024:65535;=;OK
++-p udplite -m multiport --sports 53,1024:65535;=;OK
++-p udplite -m multiport --dports 53,1024:65535;=;OK
++-p tcp -m multiport --sports 1024:65536;;FAIL
++-p udp -m multiport --sports 1024:65536;;FAIL
++-p tcp -m multiport --ports 1024:65536;;FAIL
++-p udp -m multiport --ports 1024:65536;;FAIL
++-p tcp -m multiport --ports 1,2,3,4,6,7,8,9,10,11,12,13,14,15;=;OK
++# fix manpage, it says "up to 15 ports supported"
++# ERROR: should fail: iptables -A INPUT -p tcp -m multiport --ports 1,2,3,4,6,7,8,9,10,11,12,13,14,15,16
++# -p tcp -m multiport --ports 1,2,3,4,6,7,8,9,10,11,12,13,14,15,16;;FAIL
++-p tcp --multiport;;FAIL
++-m multiport;;FAIL
+diff --git a/extensions/libxt_nfacct.t b/extensions/libxt_nfacct.t
+new file mode 100644
+index 0000000000000..3419b4cebfebf
+--- /dev/null
++++ b/extensions/libxt_nfacct.t
+@@ -0,0 +1,10 @@
++:INPUT,FORWARD,OUTPUT
++@nfacct add test
++#
++# extra space in iptables-save output, fix it
++#
++# ERROR: cannot load: iptables -A INPUT -m nfacct --nfacct-name test
++#-m nfacct --nfacct-name test;=;OK
++-m nfacct --nfacct-name wrong;;FAIL
++-m nfacct;;FAIL
++@nfacct del test
+diff --git a/extensions/libxt_osf.t b/extensions/libxt_osf.t
+new file mode 100644
+index 0000000000000..ede6d32c7cc4c
+--- /dev/null
++++ b/extensions/libxt_osf.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD
++-m osf --genre linux --ttl 0 --log 0;;FAIL
++-p tcp -m osf --genre linux --ttl 0 --log 0;=;OK
++-p tcp -m osf --genre linux --ttl 3 --log 0;;FAIL
+diff --git a/extensions/libxt_owner.t b/extensions/libxt_owner.t
+new file mode 100644
+index 0000000000000..aec30b655e9a5
+--- /dev/null
++++ b/extensions/libxt_owner.t
+@@ -0,0 +1,12 @@
++:OUTPUT,POSTROUTING
++*mangle
++-m owner --uid-owner root;-m owner --uid-owner 0;OK
++-m owner --uid-owner 0-10;=;OK
++-m owner --gid-owner root;-m owner --gid-owner 0;OK
++-m owner --gid-owner 0-10;=;OK
++-m owner --uid-owner root --gid-owner root;-m owner --uid-owner 0 --gid-owner 0;OK
++-m owner --uid-owner 0-10 --gid-owner 0-10;=;OK
++-m owner ! --uid-owner root;-m owner ! --uid-owner 0;OK
++-m owner --socket-exists;=;OK
++:INPUT
++-m owner --uid-owner root;;FAIL
+diff --git a/extensions/libxt_physdev.t b/extensions/libxt_physdev.t
+new file mode 100644
+index 0000000000000..1fab7e1920d25
+--- /dev/null
++++ b/extensions/libxt_physdev.t
+@@ -0,0 +1,14 @@
++:INPUT,FORWARD
++-m physdev --physdev-in lo;=;OK
++-m physdev --physdev-is-in --physdev-in lo;=;OK
++:OUTPUT,FORWARD
++# xt_physdev: using --physdev-out in the OUTPUT, FORWARD and POSTROUTING chains for non-bridged traffic is not supported anymore.
++# ERROR: should fail: iptables -A FORWARD -m physdev --physdev-out lo
++#-m physdev --physdev-out lo;;FAIL
++# ERROR: cannot load: iptables -A OUTPUT -m physdev --physdev-is-out --physdev-out lo
++#-m physdev --physdev-is-out --physdev-out lo;=;OK
++:FORWARD
++-m physdev --physdev-in lo --physdev-is-bridged;=;OK
++:POSTROUTING
++*mangle
++-m physdev --physdev-out lo --physdev-is-bridged;=;OK
+diff --git a/extensions/libxt_pkttype.t b/extensions/libxt_pkttype.t
+new file mode 100644
+index 0000000000000..d93baeaf24ec3
+--- /dev/null
++++ b/extensions/libxt_pkttype.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m pkttype --pkt-type unicast;=;OK
++-m pkttype --pkt-type broadcast;=;OK
++-m pkttype --pkt-type multicast;=;OK
++-m pkttype --pkt-type wrong;;FAIL
++-m pkttype;;FAIL
+diff --git a/extensions/libxt_policy.t b/extensions/libxt_policy.t
+new file mode 100644
+index 0000000000000..6524122bcf793
+--- /dev/null
++++ b/extensions/libxt_policy.t
+@@ -0,0 +1,8 @@
++:INPUT,FORWARD
++-m policy --dir in --pol ipsec;=;OK
++-m policy --dir in --pol ipsec --proto ipcomp;=;OK
++-m policy --dir in --pol ipsec --strict;;FAIL
++-m policy --dir in --pol ipsec --strict --reqid 1 --spi 0x1 --proto ipcomp;=;OK
++-m policy --dir in --pol ipsec --strict --reqid 1 --spi 0x1 --proto esp --mode tunnel --tunnel-dst 10.0.0.0/8 --tunnel-src 10.0.0.0/8 --next --reqid 2;=;OK
++-m policy --dir in --pol ipsec --strict --reqid 1 --spi 0x1 --proto esp --tunnel-dst 10.0.0.0/8;;FAIL
++-m policy --dir in --pol ipsec --strict --reqid 1 --spi 0x1 --proto ipcomp --mode tunnel --tunnel-dst 10.0.0.0/8 --tunnel-src 10.0.0.0/8 --next --reqid 2;=;OK
+diff --git a/extensions/libxt_quota.t b/extensions/libxt_quota.t
+new file mode 100644
+index 0000000000000..c568427974f84
+--- /dev/null
++++ b/extensions/libxt_quota.t
+@@ -0,0 +1,7 @@
++:INPUT,FORWARD,OUTPUT
++-m quota --quota 0;=;OK
++-m quota ! --quota 0;=;OK
++-m quota --quota 18446744073709551615;=;OK
++-m quota ! --quota 18446744073709551615;=;OK
++-m quota --quota 18446744073709551616;;FAIL
++-m quota;;FAIL
+diff --git a/extensions/libxt_rateest.t b/extensions/libxt_rateest.t
+new file mode 100644
+index 0000000000000..c5158614f46a3
+--- /dev/null
++++ b/extensions/libxt_rateest.t
+@@ -0,0 +1,16 @@
++:INPUT,FORWARD,OUTPUT
++%iptables -I INPUT -j RATEEST --rateest-name RE1 --rateest-interval 250.0ms --rateest-ewmalog 500.0ms
++-m rateest --rateest RE1 --rateest-lt --rateest-bps 8bit;=;OK
++-m rateest --rateest RE1 --rateest-eq --rateest-pps 5;=;OK
++-m rateest --rateest RE1 --rateest-gt --rateest-bps 5kbit;-m rateest --rateest RE1 --rateest-gt --rateest-bps 5000bit;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-bps1 8bit --rateest-lt --rateest-bps2 16bit;=;OK
++%iptables -I INPUT -j RATEEST --rateest-name RE2 --rateest-interval 250.0ms --rateest-ewmalog 500.0ms
++-m rateest --rateest1 RE1 --rateest-lt --rateest-bps --rateest2 RE2;=;OK
++-m rateest --rateest-delta --rateest1 RE1 --rateest-pps1 0 --rateest-lt --rateest-pps2 42 --rateest2 RE2;=;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-bps1 8bit --rateest-eq --rateest-bps2 16bit;=;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-bps1 8bit --rateest-gt --rateest-bps2 16bit;=;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-pps1 8 --rateest-lt --rateest-pps2 9;=;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-pps1 8 --rateest-eq --rateest-pps2 9;=;OK
++-m rateest --rateest-delta --rateest RE1 --rateest-pps1 8 --rateest-gt --rateest-pps2 9;=;OK
++%iptables -D INPUT -j RATEEST --rateest-name RE1 --rateest-interval 250.0ms --rateest-ewmalog 500.0ms
++%iptables -D INPUT -j RATEEST --rateest-name RE2 --rateest-interval 250.0ms --rateest-ewmalog 500.0ms
+diff --git a/extensions/libxt_recent.t b/extensions/libxt_recent.t
+new file mode 100644
+index 0000000000000..9a83918ea5835
+--- /dev/null
++++ b/extensions/libxt_recent.t
+@@ -0,0 +1,11 @@
++:INPUT,FORWARD,OUTPUT
++-m recent --set;=;OK
++-m recent --rcheck --hitcount 8 --name foo --mask 255.255.255.255 --rsource;=;OK
++-m recent --rcheck --hitcount 12 --name foo --mask 255.255.255.255 --rsource;=;OK
++-m recent --update --rttl;=;OK
++-m recent --set --rttl;;FAIL
++-m recent --rcheck --hitcount 999 --name foo --mask 255.255.255.255 --rsource;;FAIL
++# nonsensical, but all should load successfully:
++-m recent --rcheck --hitcount 3 --name foo --mask 255.255.255.255 --rsource -m recent --rcheck --hitcount 4 --name foo --mask 255.255.255.255 --rsource;=;OK
++-m recent --rcheck --hitcount 4 --name foo --mask 255.255.255.255 --rsource -m recent --rcheck --hitcount 4 --name foo --mask 255.255.255.255 --rsource;=;OK
++-m recent --rcheck --hitcount 8 --name foo --mask 255.255.255.255 --rsource -m recent --rcheck --hitcount 12 --name foo --mask 255.255.255.255 --rsource;=;OK
+diff --git a/extensions/libxt_rpfilter.t b/extensions/libxt_rpfilter.t
+new file mode 100644
+index 0000000000000..390268f35bce0
+--- /dev/null
++++ b/extensions/libxt_rpfilter.t
+@@ -0,0 +1,4 @@
++:PREROUTING
++*mangle
++-m rpfilter;=;OK
++-m rpfilter --loose --validmark --accept-local --invert;=;OK
+diff --git a/extensions/libxt_sctp.t b/extensions/libxt_sctp.t
+new file mode 100644
+index 0000000000000..4016e4fb1880e
+--- /dev/null
++++ b/extensions/libxt_sctp.t
+@@ -0,0 +1,29 @@
++:INPUT,FORWARD,OUTPUT
++-p sctp -m sctp --sport 1;=;OK
++-p sctp -m sctp --sport 65535;=;OK
++-p sctp -m sctp --sport 1:65535;=;OK
++-p sctp -m sctp --sport -1;;FAIL
++-p sctp -m sctp --sport 65536;;FAIL
++-p sctp -m sctp --dport 1;=;OK
++-p sctp -m sctp --dport 1:65535;=;OK
++-p sctp -m sctp --dport 65535;=;OK
++-p sctp -m sctp --dport -1;;FAIL
++-p sctp -m sctp --dport 65536;;FAIL
++-p sctp -m sctp --chunk-types all DATA;=;OK
++-p sctp -m sctp --chunk-types all INIT;=;OK
++-p sctp -m sctp --chunk-types all INIT_ACK;=;OK
++-p sctp -m sctp --chunk-types all SACK;=;OK
++-p sctp -m sctp --chunk-types all HEARTBEAT;=;OK
++-p sctp -m sctp --chunk-types all HEARTBEAT_ACK;=;OK
++-p sctp -m sctp --chunk-types all ABORT;=;OK
++-p sctp -m sctp --chunk-types all SHUTDOWN;=;OK
++-p sctp -m sctp --chunk-types all SHUTDOWN_ACK;=;OK
++-p sctp -m sctp --chunk-types all ERROR;=;OK
++-p sctp -m sctp --chunk-types all COOKIE_ECHO;=;OK
++-p sctp -m sctp --chunk-types all COOKIE_ACK;=;OK
++-p sctp -m sctp --chunk-types all ECN_ECNE;=;OK
++-p sctp -m sctp --chunk-types all ECN_CWR;=;OK
++-p sctp -m sctp --chunk-types all ASCONF;=;OK
++-p sctp -m sctp --chunk-types all ASCONF_ACK;=;OK
++-p sctp -m sctp --chunk-types all FORWARD_TSN;=;OK
++-p sctp -m sctp --chunk-types all SHUTDOWN_COMPLETE;=;OK
+diff --git a/extensions/libxt_set.t b/extensions/libxt_set.t
+new file mode 100644
+index 0000000000000..dd9e9f175b5f8
+--- /dev/null
++++ b/extensions/libxt_set.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-m set --match-set foo;;FAIL
++# fails: foo does not exist
++-m set --match-set foo src,dst;;FAIL
+diff --git a/extensions/libxt_socket.t b/extensions/libxt_socket.t
+new file mode 100644
+index 0000000000000..fe4eb3e4ba2d2
+--- /dev/null
++++ b/extensions/libxt_socket.t
+@@ -0,0 +1,8 @@
++:PREROUTING,INPUT
++*mangle
++-m socket;=;OK
++-m socket --transparent --nowildcard;=;OK
++-m socket --transparent --nowildcard --restore-skmark;=;OK
++-m socket --transparent --restore-skmark;=;OK
++-m socket --nowildcard --restore-skmark;=;OK
++-m socket --restore-skmark;=;OK
+diff --git a/extensions/libxt_standard.t b/extensions/libxt_standard.t
+new file mode 100644
+index 0000000000000..4313f7b7bac9d
+--- /dev/null
++++ b/extensions/libxt_standard.t
+@@ -0,0 +1,11 @@
++:INPUT,FORWARD,OUTPUT
++-s 127.0.0.1/32 -d 0.0.0.0/8 -j DROP;=;OK
++! -s 0.0.0.0 -j ACCEPT;! -s 0.0.0.0/32 -j ACCEPT;OK
++! -d 0.0.0.0/32 -j ACCEPT;=;OK
++-s 0.0.0.0/24 -j RETURN;=;OK
++-p tcp -j ACCEPT;=;OK
++! -p udp -j ACCEPT;=;OK
++-j DROP;=;OK
++-j ACCEPT;=;OK
++-j RETURN;=;OK
++! -p 0 -j ACCEPT;=;FAIL
+diff --git a/extensions/libxt_state.t b/extensions/libxt_state.t
+new file mode 100644
+index 0000000000000..8e4bce3f96e34
+--- /dev/null
++++ b/extensions/libxt_state.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m state --state INVALID;=;OK
++-m state --state NEW,RELATED;=;OK
++-m state --state UNTRACKED;=;OK
++-m state wrong;;FAIL
++-m state;;FAIL
+diff --git a/extensions/libxt_statistic.t b/extensions/libxt_statistic.t
+new file mode 100644
+index 0000000000000..bb6673dae5e4a
+--- /dev/null
++++ b/extensions/libxt_statistic.t
+@@ -0,0 +1,8 @@
++:INPUT,FORWARD,OUTPUT
++-m statistic;;FAIL
++-m statistic --mode random ! --probability 0.50000000000;=;OK
++-m statistic --mode random ! --probability 1.1;;FAIL
++-m statistic --probability 1;;FAIL
++-m statistic --mode nth ! --every 5 --packet 2;=;OK
++-m statistic --mode nth ! --every 5;;FAIL
++-m statistic --mode nth ! --every 5 --packet 5;;FAIL
+diff --git a/extensions/libxt_string.t b/extensions/libxt_string.t
+new file mode 100644
+index 0000000000000..d68f099d966c6
+--- /dev/null
++++ b/extensions/libxt_string.t
+@@ -0,0 +1,18 @@
++:INPUT,FORWARD,OUTPUT
++# ERROR: cannot find: iptables -I INPUT -m string --algo bm --string "test"
++# -m string --algo bm --string "test";=;OK
++# ERROR: cannot find: iptables -I INPUT -m string --algo kmp --string "test")
++# -m string --algo kmp --string "test";=;OK
++# ERROR: cannot find: iptables -I INPUT -m string --algo kmp ! --string "test"
++# -m string --algo kmp ! --string "test";=;OK
++# cannot find: iptables -I INPUT -m string --algo bm --string "xxxxxxxxxxx" ....]
++# -m string --algo bm --string "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";=;OK
++# ERROR: cannot load: iptables -A INPUT -m string --algo bm --string "xxxx"
++# -m string --algo bm --string "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";=;OK
++# ERROR: cannot load: iptables -A INPUT -m string --algo bm --hexstring "|0a0a0a0a|"
++# -m string --algo bm --hexstring "|0a0a0a0a|";=;OK
++# ERROR: cannot find: iptables -I INPUT -m string --algo bm --from 0 --to 65535 --string "test"
++# -m string --algo bm --from 0 --to 65535 --string "test";=;OK
++-m string --algo wrong;;FAIL
++-m string --algo bm;;FAIL
++-m string;;FAIL
+diff --git a/extensions/libxt_tcp.t b/extensions/libxt_tcp.t
+new file mode 100644
+index 0000000000000..b0e8006e51869
+--- /dev/null
++++ b/extensions/libxt_tcp.t
+@@ -0,0 +1,26 @@
++:INPUT,FORWARD,OUTPUT
++-p tcp -m tcp --sport 1;=;OK
++-p tcp -m tcp --sport 65535;=;OK
++-p tcp -m tcp --dport 1;=;OK
++-p tcp -m tcp --dport 65535;=;OK
++-p tcp -m tcp --sport 1:1023;=;OK
++-p tcp -m tcp --sport 1024:65535;=;OK
++-p tcp -m tcp --sport 1024:;-p tcp -m tcp --sport 1024:65535;OK
++-p tcp -m tcp ! --sport 1;=;OK
++-p tcp -m tcp ! --sport 65535;=;OK
++-p tcp -m tcp ! --dport 1;=;OK
++-p tcp -m tcp ! --dport 65535;=;OK
++-p tcp -m tcp --sport 1 --dport 65535;=;OK
++-p tcp -m tcp --sport 65535 --dport 1;=;OK
++-p tcp -m tcp ! --sport 1 --dport 65535;=;OK
++-p tcp -m tcp ! --sport 65535 --dport 1;=;OK
++-p tcp -m tcp --sport 65536;;FAIL
++-p tcp -m tcp --sport -1;;FAIL
++-p tcp -m tcp --dport -1;;FAIL
++-p tcp -m tcp --syn;-p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN;OK
++-p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN;=;OK
++-p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG SYN;=;OK
++-p tcp -m tcp ! --tcp-flags FIN,SYN,RST,PSH,ACK,URG SYN;=;OK
++-p tcp -m tcp --tcp-flags FIN,SYN,RST,PSH,ACK,URG RST;=;OK
++# should we accept this below?
++-p tcp -m tcp;=;OK
+diff --git a/extensions/libxt_tcpmss.t b/extensions/libxt_tcpmss.t
+new file mode 100644
+index 0000000000000..2b415957ffd00
+--- /dev/null
++++ b/extensions/libxt_tcpmss.t
+@@ -0,0 +1,6 @@
++:INPUT,FORWARD,OUTPUT
++-m tcpmss --mss 42;;FAIL
++-p tcp -m tcpmss --mss 42;=;OK
++-p tcp -m tcpmss --mss 42:12345;=;OK
++-p tcp -m tcpmss --mss 42:65536;;FAIL
++-p tcp -m tcpmss --mss 65535:1000;;FAIL
+diff --git a/extensions/libxt_time.t b/extensions/libxt_time.t
+new file mode 100644
+index 0000000000000..673af09b21fe2
+--- /dev/null
++++ b/extensions/libxt_time.t
+@@ -0,0 +1,4 @@
++:INPUT,FORWARD,OUTPUT
++-m time --timestart 01:02:03 --timestop 04:05:06 --monthdays 1,2,3,4,5 --weekdays Mon,Fri,Sun --datestart 2001-02-03T04:05:06 --datestop 2012-09-08T09:06:05 --kerneltz;=;OK
++-m time --timestart 01:02:03 --timestop 04:05:06 --monthdays 1,2,3,4,5 --weekdays Mon,Fri,Sun --datestart 2001-02-03T04:05:06 --datestop 2012-09-08T09:06:05;=;OK
++-m time --timestart 02:00:00 --timestop 03:00:00 --datestart 1970-01-01T02:00:00 --datestop 1970-01-01T03:00:00;=;OK
+diff --git a/extensions/libxt_tos.t b/extensions/libxt_tos.t
+new file mode 100644
+index 0000000000000..ccbe80099bdd9
+--- /dev/null
++++ b/extensions/libxt_tos.t
+@@ -0,0 +1,13 @@
++:INPUT,FORWARD,OUTPUT
++-m tos --tos Minimize-Delay;-m tos --tos 0x10/0x3f;OK
++-m tos --tos Maximize-Throughput;-m tos --tos 0x08/0x3f;OK
++-m tos --tos Maximize-Reliability;-m tos --tos 0x04/0x3f;OK
++-m tos --tos Minimize-Cost;-m tos --tos 0x02/0x3f;OK
++-m tos --tos Normal-Service;-m tos --tos 0x00/0x3f;OK
++-m tos --tos 0xff;=;OK
++-m tos ! --tos 0xff;=;OK
++-m tos --tos 0x00;=;OK
++-m tos --tos 0x0f;=;OK
++-m tos --tos 0x0f/0x0f;=;OK
++-m tos --tos wrong;;FAIL
++-m tos;;FAIL
+diff --git a/extensions/libxt_u32.t b/extensions/libxt_u32.t
+new file mode 100644
+index 0000000000000..0d9be47a10e84
+--- /dev/null
++++ b/extensions/libxt_u32.t
+@@ -0,0 +1,2 @@
++:INPUT,FORWARD,OUTPUT
++-m u32 --u32 "0x0=0x0&&0x0=0x1";=;OK
+diff --git a/extensions/libxt_udp.t b/extensions/libxt_udp.t
+new file mode 100644
+index 0000000000000..1b4d3dd625759
+--- /dev/null
++++ b/extensions/libxt_udp.t
+@@ -0,0 +1,22 @@
++:INPUT,OUTPUT,FORWARD
++-p udp -m udp --sport 1;=;OK
++-p udp -m udp --sport 65535;=;OK
++-p udp -m udp --dport 1;=;OK
++-p udp -m udp --dport 65535;=;OK
++-p udp -m udp --sport 1:1023;=;OK
++-p udp -m udp --sport 1024:65535;=;OK
++-p udp -m udp --sport 1024:;-p udp -m udp --sport 1024:65535;OK
++-p udp -m udp ! --sport 1;=;OK
++-p udp -m udp ! --sport 65535;=;OK
++-p udp -m udp ! --dport 1;=;OK
++-p udp -m udp ! --dport 65535;=;OK
++-p udp -m udp --sport 1 --dport 65535;=;OK
++-p udp -m udp --sport 65535 --dport 1;=;OK
++-p udp -m udp ! --sport 1 --dport 65535;=;OK
++-p udp -m udp ! --sport 65535 --dport 1;=;OK
++# ERRROR: should fail: iptables -A INPUT -p udp -m udp --sport 65536
++# -p udp -m udp --sport 65536;;FAIL
++-p udp -m udp --sport -1;;FAIL
++-p udp -m udp --dport -1;;FAIL
++# should we accept this below?
++-p udp -m udp;=;OK
+diff --git a/iptables-test.py b/iptables-test.py
+new file mode 100755
+index 0000000000000..532dee7c9000f
+--- /dev/null
++++ b/iptables-test.py
+@@ -0,0 +1,373 @@
++#!/usr/bin/python
++#
++# (C) 2012-2013 by Pablo Neira Ayuso <pablo@netfilter.org>
++#
++# This program is free software; you can redistribute it and/or modify
++# it under the terms of the GNU General Public License as published by
++# the Free Software Foundation; either version 2 of the License, or
++# (at your option) any later version.
++#
++# This software has been sponsored by Sophos Astaro <http://www.sophos.com>
++#
++
++import sys
++import os
++import subprocess
++import argparse
++
++IPTABLES = "iptables"
++IP6TABLES = "ip6tables"
++ARPTABLES = "arptables"
++EBTABLES = "ebtables"
++
++IPTABLES_SAVE = "iptables-save"
++IP6TABLES_SAVE = "ip6tables-save"
++ARPTABLES_SAVE = "arptables-save"
++EBTABLES_SAVE = "ebtables-save"
++#IPTABLES_SAVE = ['xtables-save','-4']
++#IP6TABLES_SAVE = ['xtables-save','-6']
++
++EXTENSIONS_PATH = "extensions"
++LOGFILE="/tmp/iptables-test.log"
++log_file = None
++
++
++class Colors:
++    HEADER = '\033[95m'
++    BLUE = '\033[94m'
++    GREEN = '\033[92m'
++    YELLOW = '\033[93m'
++    RED = '\033[91m'
++    ENDC = '\033[0m'
++
++
++def print_error(reason, filename=None, lineno=None):
++    '''
++    Prints an error with nice colors, indicating file and line number.
++    '''
++    print (filename + ": " + Colors.RED + "ERROR" +
++        Colors.ENDC + ": line %d (%s)" % (lineno, reason))
++
++
++def delete_rule(iptables, rule, filename, lineno):
++    '''
++    Removes an iptables rule
++    '''
++    cmd = iptables + " -D " + rule
++    ret = execute_cmd(cmd, filename, lineno)
++    if ret == 1:
++        reason = "cannot delete: " + iptables + " -I " + rule
++        print_error(reason, filename, lineno)
++        return -1
++
++    return 0
++
++
++def run_test(iptables, rule, rule_save, res, filename, lineno, netns):
++    '''
++    Executes an unit test. Returns the output of delete_rule().
++
++    Parameters:
++    :param  iptables: string with the iptables command to execute
++    :param rule: string with iptables arguments for the rule to test
++    :param rule_save: string to find the rule in the output of iptables -save
++    :param res: expected result of the rule. Valid values: "OK", "FAIL"
++    :param filename: name of the file tested (used for print_error purposes)
++    :param lineno: line number being tested (used for print_error purposes)
++    '''
++    ret = 0
++
++    cmd = iptables + " -A " + rule
++    if netns:
++            cmd = "ip netns exec ____iptables-container-test " + EXECUTEABLE + " " + cmd
++
++    ret = execute_cmd(cmd, filename, lineno)
++
++    #
++    # report failed test
++    #
++    if ret:
++        if res == "OK":
++            reason = "cannot load: " + cmd
++            print_error(reason, filename, lineno)
++            return -1
++        else:
++            # do not report this error
++            return 0
++    else:
++        if res == "FAIL":
++            reason = "should fail: " + cmd
++            print_error(reason, filename, lineno)
++            delete_rule(iptables, rule, filename, lineno)
++            return -1
++
++    matching = 0
++    splitted = iptables.split(" ")
++    if len(splitted) == 2:
++        if splitted[1] == '-4':
++            command = IPTABLES_SAVE
++        elif splitted[1] == '-6':
++            command = IP6TABLES_SAVE
++    elif len(splitted) == 1:
++        if splitted[0] == IPTABLES:
++            command = IPTABLES_SAVE
++        elif splitted[0] == IP6TABLES:
++            command = IP6TABLES_SAVE
++        elif splitted[0] == ARPTABLES:
++            command = ARPTABLES_SAVE
++        elif splitted[0] == EBTABLES:
++            command = EBTABLES_SAVE
++
++    path = os.path.abspath(os.path.curdir) + "/iptables/" + EXECUTEABLE
++    command = path + " " + command
++
++    if netns:
++            command = "ip netns exec ____iptables-container-test " + command
++
++    args = splitted[1:]
++    proc = subprocess.Popen(command, shell=True,
++                            stdin=subprocess.PIPE,
++                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++    out, err = proc.communicate()
++
++    #
++    # check for segfaults
++    #
++    if proc.returncode == -11:
++        reason = "iptables-save segfaults: " + cmd
++        print_error(reason, filename, lineno)
++        delete_rule(iptables, rule, filename, lineno)
++        return -1
++
++    # find the rule
++    matching = out.find(rule_save)
++    if matching < 0:
++        reason = "cannot find: " + iptables + " -I " + rule
++        print_error(reason, filename, lineno)
++        delete_rule(iptables, rule, filename, lineno)
++        return -1
++
++    # Test "ip netns del NETNS" path with rules in place
++    if netns:
++        return 0
++
++    return delete_rule(iptables, rule, filename, lineno)
++
++def execute_cmd(cmd, filename, lineno):
++    '''
++    Executes a command, checking for segfaults and returning the command exit
++    code.
++
++    :param cmd: string with the command to be executed
++    :param filename: name of the file tested (used for print_error purposes)
++    :param lineno: line number being tested (used for print_error purposes)
++    '''
++    global log_file
++    if cmd.startswith('iptables ') or cmd.startswith('ip6tables ') or cmd.startswith('ebtables ') or cmd.startswith('arptables '):
++        cmd = os.path.abspath(os.path.curdir) + "/iptables/" + EXECUTEABLE + " " + cmd
++
++    print >> log_file, "command: %s" % cmd
++    ret = subprocess.call(cmd, shell=True, universal_newlines=True,
++        stderr=subprocess.STDOUT, stdout=log_file)
++    log_file.flush()
++
++    # generic check for segfaults
++    if ret  == -11:
++        reason = "command segfaults: " + cmd
++        print_error(reason, filename, lineno)
++    return ret
++
++
++def run_test_file(filename, netns):
++    '''
++    Runs a test file
++
++    :param filename: name of the file with the test rules
++    '''
++    #
++    # if this is not a test file, skip.
++    #
++    if not filename.endswith(".t"):
++        return 0, 0
++
++    if "libipt_" in filename:
++        iptables = IPTABLES
++    elif "libip6t_" in filename:
++        iptables = IP6TABLES
++    elif "libxt_"  in filename:
++        iptables = IPTABLES
++    elif "libarpt_" in filename:
++        # only supported with nf_tables backend
++        if EXECUTEABLE != "xtables-nft-multi":
++           return 0, 0
++        iptables = ARPTABLES
++    elif "libebt_" in filename:
++        # only supported with nf_tables backend
++        if EXECUTEABLE != "xtables-nft-multi":
++           return 0, 0
++        iptables = EBTABLES
++    else:
++        # default to iptables if not known prefix
++        iptables = IPTABLES
++
++    f = open(filename)
++
++    tests = 0
++    passed = 0
++    table = ""
++    total_test_passed = True
++
++    if netns:
++        execute_cmd("ip netns add ____iptables-container-test", filename, 0)
++
++    for lineno, line in enumerate(f):
++        if line[0] == "#":
++            continue
++
++        if line[0] == ":":
++            chain_array = line.rstrip()[1:].split(",")
++            continue
++
++        # external non-iptables invocation, executed as is.
++        if line[0] == "@":
++            external_cmd = line.rstrip()[1:]
++            if netns:
++                external_cmd = "ip netns exec ____iptables-container-test " + external_cmd
++            execute_cmd(external_cmd, filename, lineno)
++            continue
++
++        # external iptables invocation, executed as is.
++        if line[0] == "%":
++            external_cmd = line.rstrip()[1:]
++            if netns:
++                external_cmd = "ip netns exec ____iptables-container-test " + EXECUTEABLE + " " + external_cmd
++            execute_cmd(external_cmd, filename, lineno)
++            continue
++
++        if line[0] == "*":
++            table = line.rstrip()[1:]
++            continue
++
++        if len(chain_array) == 0:
++            print "broken test, missing chain, leaving"
++            sys.exit()
++
++        test_passed = True
++        tests += 1
++
++        for chain in chain_array:
++            item = line.split(";")
++            if table == "":
++                rule = chain + " " + item[0]
++            else:
++                rule = chain + " -t " + table + " " + item[0]
++
++            if item[1] == "=":
++                rule_save = chain + " " + item[0]
++            else:
++                rule_save = chain + " " + item[1]
++
++            res = item[2].rstrip()
++            ret = run_test(iptables, rule, rule_save,
++                           res, filename, lineno + 1, netns)
++
++            if ret < 0:
++                test_passed = False
++                total_test_passed = False
++                break
++
++        if test_passed:
++            passed += 1
++
++    if netns:
++        execute_cmd("ip netns del ____iptables-container-test", filename, 0)
++    if total_test_passed:
++        print filename + ": " + Colors.GREEN + "OK" + Colors.ENDC
++
++    f.close()
++    return tests, passed
++
++
++def show_missing():
++    '''
++    Show the list of missing test files
++    '''
++    file_list = os.listdir(EXTENSIONS_PATH)
++    testfiles = [i for i in file_list if i.endswith('.t')]
++    libfiles = [i for i in file_list
++                if i.startswith('lib') and i.endswith('.c')]
++
++    def test_name(x):
++        return x[0:-2] + '.t'
++    missing = [test_name(i) for i in libfiles
++               if not test_name(i) in testfiles]
++
++    print '\n'.join(missing)
++
++
++#
++# main
++#
++def main():
++    parser = argparse.ArgumentParser(description='Run iptables tests')
++    parser.add_argument('filename', nargs='?',
++                        metavar='path/to/file.t',
++                        help='Run only this test')
++    parser.add_argument('-l', '--legacy', action='store_true',
++                        help='Test iptables-legacy')
++    parser.add_argument('-m', '--missing', action='store_true',
++                        help='Check for missing tests')
++    parser.add_argument('-n', '--nftables', action='store_true',
++                        help='Test iptables-over-nftables')
++    parser.add_argument('-N', '--netns', action='store_true',
++                        help='Test netnamespace path')
++    args = parser.parse_args()
++
++    #
++    # show list of missing test files
++    #
++    if args.missing:
++        show_missing()
++        return
++
++    global EXECUTEABLE
++    EXECUTEABLE = "xtables-legacy-multi"
++    if args.nftables:
++        EXECUTEABLE = "xtables-nft-multi"
++
++    if os.getuid() != 0:
++        print "You need to be root to run this, sorry"
++        return
++
++    os.putenv("XTABLES_LIBDIR", os.path.abspath(EXTENSIONS_PATH))
++    os.putenv("PATH", "%s/iptables:%s" % (os.path.abspath(os.path.curdir), os.getenv("PATH")))
++
++    test_files = 0
++    tests = 0
++    passed = 0
++
++    # setup global var log file
++    global log_file
++    try:
++        log_file = open(LOGFILE, 'w')
++    except IOError:
++        print "Couldn't open log file %s" % LOGFILE
++        return
++
++    file_list = [os.path.join(EXTENSIONS_PATH, i)
++                 for i in os.listdir(EXTENSIONS_PATH)]
++    if args.filename:
++        file_list = [args.filename]
++    for filename in file_list:
++        file_tests, file_passed = run_test_file(filename, args.netns)
++        if file_tests:
++            tests += file_tests
++            passed += file_passed
++            test_files += 1
++
++    print ("%d test files, %d unit tests, %d passed" %
++           (test_files, tests, passed))
++
++
++if __name__ == '__main__':
++    main()
+-- 
+2.21.0
+

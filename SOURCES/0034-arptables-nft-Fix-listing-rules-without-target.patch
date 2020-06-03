@@ -1,0 +1,32 @@
+From 922b572f262469c9332ea9a7f18808033129b017 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 31 Jan 2019 16:12:50 +0100
+Subject: [PATCH] arptables-nft: Fix listing rules without target
+
+Don't try to print cs.jumpto if it is an empty string, otherwise listing
+(and verbose output) contains '-j' flag without argument.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 043bf38bc9ee020bbf1a9789773050d47f83b807)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-arp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/iptables/nft-arp.c b/iptables/nft-arp.c
+index 37850bd328b71..56021223bdbe6 100644
+--- a/iptables/nft-arp.c
++++ b/iptables/nft-arp.c
+@@ -598,7 +598,7 @@ nft_arp_print_rule(struct nftnl_rule *r, unsigned int num, unsigned int format)
+ 
+ 	nft_rule_to_iptables_command_state(r, &cs);
+ 
+-	if (cs.jumpto)
++	if (strlen(cs.jumpto))
+ 		printf("-j %s ", cs.jumpto);
+ 	nft_arp_print_rule_details(&cs.arp, format);
+ 	print_matches_and_target(&cs, format);
+-- 
+2.21.0
+

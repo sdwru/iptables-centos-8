@@ -1,0 +1,97 @@
+From b029ccdc27297b60348492ab98376789ea53fa01 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Fri, 1 Feb 2019 19:17:50 +0100
+Subject: [PATCH] xtables: Fix for crash when comparing rules with standard
+ target
+
+When parsing an nftnl_rule with a standard verdict,
+nft_rule_to_iptables_command_state() initialized cs->target but didn't
+care about cs->target->t. When later comparing that rule to another,
+compare_targets() crashed due to unconditional access to t's fields.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit a880cc28358a32f96467e248266973b6ab83f080)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-shared.c                         | 23 +++++++++++++++----
+ .../testcases/iptables/0005-delete-rules_0    |  7 ++++++
+ iptables/xtables.c                            |  4 +++-
+ 3 files changed, 29 insertions(+), 5 deletions(-)
+ create mode 100755 iptables/tests/shell/testcases/iptables/0005-delete-rules_0
+
+diff --git a/iptables/nft-shared.c b/iptables/nft-shared.c
+index 7b8ca5e4becaf..dfc1c803cb68d 100644
+--- a/iptables/nft-shared.c
++++ b/iptables/nft-shared.c
+@@ -660,19 +660,34 @@ void nft_rule_to_iptables_command_state(const struct nftnl_rule *r,
+ 		match->m = m;
+ 	}
+ 
+-	if (cs->target != NULL)
++	if (cs->target != NULL) {
+ 		cs->jumpto = cs->target->name;
+-	else if (cs->jumpto != NULL)
++	} else if (cs->jumpto != NULL) {
++		struct xt_entry_target *t;
++		uint32_t size;
++
+ 		cs->target = xtables_find_target(cs->jumpto, XTF_TRY_LOAD);
+-	else
++		if (!cs->target)
++			return;
++
++		size = XT_ALIGN(sizeof(struct xt_entry_target)) + cs->target->size;
++		t = xtables_calloc(1, size);
++		t->u.target_size = size;
++		t->u.user.revision = cs->target->revision;
++		strcpy(t->u.user.name, cs->jumpto);
++		cs->target->t = t;
++	} else {
+ 		cs->jumpto = "";
++	}
+ }
+ 
+ void nft_clear_iptables_command_state(struct iptables_command_state *cs)
+ {
+ 	xtables_rule_matches_free(&cs->matches);
+-	if (cs->target)
++	if (cs->target) {
+ 		free(cs->target->t);
++		cs->target->t = NULL;
++	}
+ }
+ 
+ void print_header(unsigned int format, const char *chain, const char *pol,
+diff --git a/iptables/tests/shell/testcases/iptables/0005-delete-rules_0 b/iptables/tests/shell/testcases/iptables/0005-delete-rules_0
+new file mode 100755
+index 0000000000000..9312fd53c3437
+--- /dev/null
++++ b/iptables/tests/shell/testcases/iptables/0005-delete-rules_0
+@@ -0,0 +1,7 @@
++#!/bin/bash
++
++# test for crash when comparing rules with standard target
++
++$XT_MULTI iptables -A FORWARD -i eth23 -o eth42 -j DROP
++$XT_MULTI iptables -D FORWARD -i eth23 -o eth42 -j REJECT
++[[ $? -eq 1 ]] || exit 1
+diff --git a/iptables/xtables.c b/iptables/xtables.c
+index d0167e6396975..eaa9fedeb03bb 100644
+--- a/iptables/xtables.c
++++ b/iptables/xtables.c
+@@ -1185,8 +1185,10 @@ int do_commandx(struct nft_handle *h, int argc, char *argv[], char **table,
+ 	*table = p.table;
+ 
+ 	xtables_rule_matches_free(&cs.matches);
+-	if (cs.target)
++	if (cs.target) {
+ 		free(cs.target->t);
++		cs.target->t = NULL;
++	}
+ 
+ 	if (h->family == AF_INET) {
+ 		free(args.s.addr.v4);
+-- 
+2.21.0
+

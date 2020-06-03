@@ -1,0 +1,51 @@
+From 39808343b03078f992bc5e831ccdd843312f0714 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Tue, 18 Dec 2018 12:16:30 +0100
+Subject: [PATCH] extensions: TRACE: Point at xtables-monitor in documentation
+
+With iptables-nft, logging of trace events is different from legacy.
+Explain why and hint at how to receive events in this case.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 9ac39888722ee9c7e97d9b8cb9eb4f33b582130a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libxt_TRACE.man | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/extensions/libxt_TRACE.man b/extensions/libxt_TRACE.man
+index 8d590a52e26f8..5187a8d22802f 100644
+--- a/extensions/libxt_TRACE.man
++++ b/extensions/libxt_TRACE.man
+@@ -1,13 +1,20 @@
+ This target marks packets so that the kernel will log every rule which match 
+-the packets as those traverse the tables, chains, rules.
++the packets as those traverse the tables, chains, rules. It can only be used in
++the
++.BR raw
++table.
+ .PP
+-A logging backend, such as ip(6)t_LOG or nfnetlink_log, must be loaded for this
+-to be visible.
++With iptables-legacy, a logging backend, such as ip(6)t_LOG or nfnetlink_log,
++must be loaded for this to be visible.
+ The packets are logged with the string prefix:
+ "TRACE: tablename:chainname:type:rulenum " where type can be "rule" for 
+ plain rule, "return" for implicit rule at the end of a user defined chain 
+ and "policy" for the policy of the built in chains. 
+-.br
+-It can only be used in the
+-.BR raw
+-table.
++.PP
++With iptables-nft, the target is translated into nftables'
++.B "meta nftrace"
++expression. Hence the kernel sends trace events via netlink to userspace where
++they may be displayed using
++.B "xtables-monitor --trace"
++command. For details, refer to
++.BR xtables-monitor (8).
+-- 
+2.21.0
+

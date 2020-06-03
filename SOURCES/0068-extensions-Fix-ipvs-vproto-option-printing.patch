@@ -1,0 +1,33 @@
+From 216e0c58489f3d730456ca1e55bffe25aa50e9d8 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 21 Feb 2019 20:09:31 +0100
+Subject: [PATCH] extensions: Fix ipvs vproto option printing
+
+This was broken since day 1: vproto option was printed as 'proto' which
+in turn iptables wouldn't accept anymore.
+
+Fixes: c36d05e424069 ("libxt_ipvs: user-space lib for netfilter matcher xt_ipvs")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit dd1ad59f0df66811335c10ed90c33151a658a50e)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libxt_ipvs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/extensions/libxt_ipvs.c b/extensions/libxt_ipvs.c
+index fe98fef951686..51952be4245b3 100644
+--- a/extensions/libxt_ipvs.c
++++ b/extensions/libxt_ipvs.c
+@@ -165,7 +165,7 @@ static void ipvs_mt_dump(const void *ip, const struct xt_ipvs_mtinfo *data,
+ 	if (data->bitmask & XT_IPVS_PROTO) {
+ 		if (data->invert & XT_IPVS_PROTO)
+ 			printf(" !");
+-		printf(" %sproto %u", prefix, data->l4proto);
++		printf(" %svproto %u", prefix, data->l4proto);
+ 	}
+ 
+ 	if (data->bitmask & XT_IPVS_VADDR) {
+-- 
+2.21.0
+

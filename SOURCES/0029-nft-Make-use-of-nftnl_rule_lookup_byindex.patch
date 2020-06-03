@@ -1,0 +1,76 @@
+From 4af07f53926f4bf65caa3804adbadb726e3dc301 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 20 Dec 2018 16:09:20 +0100
+Subject: [PATCH] nft: Make use of nftnl_rule_lookup_byindex()
+
+Use the function where suitable to potentially speedup rule cache lookup
+by rule number.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 039b04896521026d1cb52d60dbacb6ee5226c02d)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 31 ++++++++++++++++++-------------
+ 1 file changed, 18 insertions(+), 13 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index e0455eabda77a..1fd3837f2d334 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -1976,27 +1976,21 @@ nft_rule_find(struct nft_handle *h, struct nftnl_chain *c, void *data, int rulen
+ {
+ 	struct nftnl_rule *r;
+ 	struct nftnl_rule_iter *iter;
+-	int rule_ctr = 0;
+ 	bool found = false;
+ 
++	if (rulenum >= 0)
++		/* Delete by rule number case */
++		return nftnl_rule_lookup_byindex(c, rulenum);
++
+ 	iter = nftnl_rule_iter_create(c);
+ 	if (iter == NULL)
+ 		return 0;
+ 
+ 	r = nftnl_rule_iter_next(iter);
+ 	while (r != NULL) {
+-		if (rulenum >= 0) {
+-			/* Delete by rule number case */
+-			if (rule_ctr == rulenum) {
+-			    found = true;
+-			    break;
+-			}
+-		} else {
+-			found = h->ops->rule_find(h->ops, r, data);
+-			if (found)
+-				break;
+-		}
+-		rule_ctr++;
++		found = h->ops->rule_find(h->ops, r, data);
++		if (found)
++			break;
+ 		r = nftnl_rule_iter_next(iter);
+ 	}
+ 
+@@ -2202,6 +2196,17 @@ __nft_rule_list(struct nft_handle *h, struct nftnl_chain *c,
+ 	struct nftnl_rule *r;
+ 	int rule_ctr = 0;
+ 
++	if (rulenum > 0) {
++		r = nftnl_rule_lookup_byindex(c, rulenum - 1);
++		if (!r)
++			/* iptables-legacy returns 0 when listing for
++			 * valid chain but invalid rule number
++			 */
++			return 1;
++		cb(r, rulenum, format);
++		return 1;
++	}
++
+ 	iter = nftnl_rule_iter_create(c);
+ 	if (iter == NULL)
+ 		return 0;
+-- 
+2.21.0
+

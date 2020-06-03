@@ -1,0 +1,33 @@
+From 4a6f89b263a62f078e73cbc01d09330a217a23c7 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Sat, 15 Dec 2018 19:25:04 +0100
+Subject: [PATCH] xtables: Catch errors when zeroing rule rounters
+
+Covscan complained about call to batch_rule_add() not being checked.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 4c54c892443c20a1d0e1212d541da0e81647058a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 4fdc789d99928..2d527358cc7f2 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -3218,7 +3218,9 @@ static int __nft_chain_zero_counters(struct nftnl_chain *c, void *data)
+ 			 * rule based on its handle only.
+ 			 */
+ 			nftnl_rule_unset(r, NFTNL_RULE_POSITION);
+-			batch_rule_add(h, NFT_COMPAT_RULE_REPLACE, r);
++			ret = batch_rule_add(h, NFT_COMPAT_RULE_REPLACE, r);
++			if (ret)
++				return -1;
+ 		}
+ 		r = nftnl_rule_iter_next(iter);
+ 	}
+-- 
+2.21.0
+

@@ -1,0 +1,61 @@
+From 44f264cec0399e235755b44efbf856232b2e7e22 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Fri, 15 Feb 2019 15:27:43 +0100
+Subject: [PATCH] arptables: Print space before comma and counters
+
+Legacy arptables separates counters from rest of rule by ' , '. Assuming
+that scripts scraping 'arptables -vL' output match on this, make
+arptables-nft output conformant.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit 73a0c2ef36d15e8277f0e00337736668b325381a)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft-arp.c                                   |  2 +-
+ .../arptables/0003-arptables-verbose-output_0        | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/iptables/nft-arp.c b/iptables/nft-arp.c
+index b436570291b7c..aed4c2ab02604 100644
+--- a/iptables/nft-arp.c
++++ b/iptables/nft-arp.c
+@@ -618,7 +618,7 @@ nft_arp_print_rule(struct nftnl_rule *r, unsigned int num, unsigned int format)
+ 	print_matches_and_target(&cs, format);
+ 
+ 	if (!(format & FMT_NOCOUNTS)) {
+-		printf(", pcnt=");
++		printf(" , pcnt=");
+ 		xtables_print_num(cs.counters.pcnt, format | FMT_NOTABLE);
+ 		printf("-- bcnt=");
+ 		xtables_print_num(cs.counters.bcnt, format | FMT_NOTABLE);
+diff --git a/iptables/tests/shell/testcases/arptables/0003-arptables-verbose-output_0 b/iptables/tests/shell/testcases/arptables/0003-arptables-verbose-output_0
+index 35126fa7d717c..3a9807a1cfe0b 100755
+--- a/iptables/tests/shell/testcases/arptables/0003-arptables-verbose-output_0
++++ b/iptables/tests/shell/testcases/arptables/0003-arptables-verbose-output_0
+@@ -36,16 +36,16 @@ diff -u -Z <(echo -e "$VOUT5") <($XT_MULTI arptables -v -A OUTPUT $RULE5)
+ diff -u -Z <(echo -e "$VOUT6") <($XT_MULTI arptables -v -A foo $RULE6)
+ 
+ EXPECT='Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+--j ACCEPT -i eth23 -o *, pcnt=0 -- bcnt=0
+--i eth23 -o *, pcnt=0 -- bcnt=0
+--j MARK -i eth23 -o * --set-mark 42, pcnt=0 -- bcnt=0
++-j ACCEPT -i eth23 -o * , pcnt=0 -- bcnt=0
++-i eth23 -o * , pcnt=0 -- bcnt=0
++-j MARK -i eth23 -o * --set-mark 42 , pcnt=0 -- bcnt=0
+ 
+ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+--j CLASSIFY -i * -o eth23 --set-class 23:42, pcnt=0 -- bcnt=0
+--j foo -i * -o eth23, pcnt=0 -- bcnt=0
++-j CLASSIFY -i * -o eth23 --set-class 23:42 , pcnt=0 -- bcnt=0
++-j foo -i * -o eth23 , pcnt=0 -- bcnt=0
+ 
+ Chain foo (1 references)
+--j mangle -i * -o eth23 --mangle-ip-s 10.0.0.1, pcnt=0 -- bcnt=0'
++-j mangle -i * -o eth23 --mangle-ip-s 10.0.0.1 , pcnt=0 -- bcnt=0'
+ 
+ diff -u -Z <(echo -e "$EXPECT") <($XT_MULTI arptables -v -n -L)
+ 
+-- 
+2.21.0
+

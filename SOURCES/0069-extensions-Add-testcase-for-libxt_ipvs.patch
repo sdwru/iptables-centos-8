@@ -1,0 +1,45 @@
+From 623a4ed4f75d1a0537525a8ea49dc882629b9eed Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 21 Feb 2019 20:09:32 +0100
+Subject: [PATCH] extensions: Add testcase for libxt_ipvs
+
+Given that it is fixed now, make it stay.
+
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 06da3ab2c818b15304a285a798eaaf16ebf375ea)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libxt_ipvs.t | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+ create mode 100644 extensions/libxt_ipvs.t
+
+diff --git a/extensions/libxt_ipvs.t b/extensions/libxt_ipvs.t
+new file mode 100644
+index 0000000000000..c2acc6668d1b2
+--- /dev/null
++++ b/extensions/libxt_ipvs.t
+@@ -0,0 +1,20 @@
++:INPUT,FORWARD,OUTPUT
++-m ipvs --ipvs;=;OK
++-m ipvs ! --ipvs;=;OK
++-m ipvs --vproto tcp;-m ipvs --vproto 6;OK
++-m ipvs ! --vproto TCP;-m ipvs ! --vproto 6;OK
++-m ipvs --vproto 23;=;OK
++-m ipvs --vaddr 1.2.3.4;=;OK
++-m ipvs ! --vaddr 1.2.3.4/255.255.255.0;-m ipvs ! --vaddr 1.2.3.4/24;OK
++-m ipvs --vport http;-m ipvs --vport 80;OK
++-m ipvs ! --vport ssh;-m ipvs ! --vport 22;OK
++-m ipvs --vport 22;=;OK
++-m ipvs ! --vport 443;=;OK
++-m ipvs --vdir ORIGINAL;=;OK
++-m ipvs --vdir REPLY;=;OK
++-m ipvs --vmethod GATE;=;OK
++-m ipvs ! --vmethod IPIP;=;OK
++-m ipvs --vmethod MASQ;=;OK
++-m ipvs --vportctl 21;=;OK
++-m ipvs ! --vportctl 21;=;OK
++-m ipvs --vproto 6 --vaddr 1.2.3.4/16 --vport 22 --vdir ORIGINAL --vmethod GATE;=;OK
+-- 
+2.21.0
+

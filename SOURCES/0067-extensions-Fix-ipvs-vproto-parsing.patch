@@ -1,0 +1,48 @@
+From ba7ef8b709eb347bfc5b0c76485747f89b90814f Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 21 Feb 2019 20:09:30 +0100
+Subject: [PATCH] extensions: Fix ipvs vproto parsing
+
+This was broken by integration into guided option parser:
+
+* Make 'vproto' option XTTYPE_PROTOCOL, otherwise its arguments are
+  parsed as garbage only.
+
+* Drop O_VPROTO case from ipvs_mt_parse(), due to XTOPT_POINTER() and
+  above change there is nothing to do for it in there.
+
+Fixes: 372203af4c70f ("libxt_ipvs: use guided option parser")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit fcbdc69e8a750fe02c9d7c7aced0efc91715132d)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ extensions/libxt_ipvs.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/extensions/libxt_ipvs.c b/extensions/libxt_ipvs.c
+index a6c57a030d2c6..fe98fef951686 100644
+--- a/extensions/libxt_ipvs.c
++++ b/extensions/libxt_ipvs.c
+@@ -27,7 +27,7 @@ enum {
+ static const struct xt_option_entry ipvs_mt_opts[] = {
+ 	{.name = "ipvs", .id = O_IPVS, .type = XTTYPE_NONE,
+ 	 .flags = XTOPT_INVERT},
+-	{.name = "vproto", .id = O_VPROTO, .type = XTTYPE_STRING,
++	{.name = "vproto", .id = O_VPROTO, .type = XTTYPE_PROTOCOL,
+ 	 .flags = XTOPT_INVERT | XTOPT_PUT, XTOPT_POINTER(s, l4proto)},
+ 	{.name = "vaddr", .id = O_VADDR, .type = XTTYPE_HOSTMASK,
+ 	 .flags = XTOPT_INVERT},
+@@ -69,9 +69,6 @@ static void ipvs_mt_parse(struct xt_option_call *cb)
+ 
+ 	xtables_option_parse(cb);
+ 	switch (cb->entry->id) {
+-	case O_VPROTO:
+-		data->l4proto = cb->val.protocol;
+-		break;
+ 	case O_VADDR:
+ 		memcpy(&data->vaddr, &cb->val.haddr, sizeof(cb->val.haddr));
+ 		memcpy(&data->vmask, &cb->val.hmask, sizeof(cb->val.hmask));
+-- 
+2.21.0
+

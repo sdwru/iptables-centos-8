@@ -1,0 +1,46 @@
+From 0a966eeecf8aa14924fd3ae221946c92417e6d71 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Thu, 7 Feb 2019 09:20:10 +0100
+Subject: [PATCH] nft: Eliminate dead code in __nft_rule_list
+
+If passed a rulenum > 0, the function uses nftnl_rule_lookup_byindex()
+and returns early. Negative rulenum values are not supposed to happen,
+so the remaining code which iterates over the full list of rules does
+not need to respect rulenum anymore.
+
+Fixes: 039b048965210 ("nft: Make use of nftnl_rule_lookup_byindex()")
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Florian Westphal <fw@strlen.de>
+(cherry picked from commit 519f5bcd9c07e0092a1a019176c82fb3bfbd9ced)
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index 2d527358cc7f2..d708fb6176b88 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -2331,18 +2331,7 @@ __nft_rule_list(struct nft_handle *h, struct nftnl_chain *c,
+ 
+ 	r = nftnl_rule_iter_next(iter);
+ 	while (r != NULL) {
+-		rule_ctr++;
+-
+-		if (rulenum > 0 && rule_ctr != rulenum) {
+-			/* List by rule number case */
+-			goto next;
+-		}
+-
+-		cb(r, rule_ctr, format);
+-		if (rulenum > 0)
+-			break;
+-
+-next:
++		cb(r, ++rule_ctr, format);
+ 		r = nftnl_rule_iter_next(iter);
+ 	}
+ 
+-- 
+2.21.0
+

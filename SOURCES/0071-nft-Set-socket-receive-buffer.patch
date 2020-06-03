@@ -1,0 +1,121 @@
+From 77b8d7784082889a66d689aac1972154ef46da08 Mon Sep 17 00:00:00 2001
+From: Phil Sutter <phil@nwl.cc>
+Date: Tue, 2 Jul 2019 20:30:49 +0200
+Subject: [PATCH] nft: Set socket receive buffer
+
+When trying to delete user-defined chains in a large ruleset,
+iptables-nft aborts with "No buffer space available". This can be
+reproduced using the following script:
+
+| #! /bin/bash
+| iptables-nft-restore <(
+|
+| echo "*filter"
+| for i in $(seq 0 200000);do
+|         printf ":chain_%06x - [0:0]\n" $i
+| done
+| for i in $(seq 0 200000);do
+|         printf -- "-A INPUT -j chain_%06x\n" $i
+|         printf -- "-A INPUT -j chain_%06x\n" $i
+| done
+| echo COMMIT
+|
+| )
+| iptables-nft -X
+
+The problem seems to be the sheer amount of netlink error messages sent
+back to user space (one EBUSY for each chain). To solve this, set
+receive buffer size depending on number of commands sent to kernel.
+
+Suggested-by: Pablo Neira Ayuso <pablo@netfilter.org>
+Signed-off-by: Phil Sutter <phil@nwl.cc>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+(cherry picked from commit d3e39e9c457f452540359e42fb58d64a28fe3e18)
+
+Conflicts:
+	iptables/nft.c
+-> Context change due to missing commits 17c282003f463
+   ("nft: reset netlink sender buffer size of socket restart") and
+   58d7de0181f61 ("xtables: handle concurrent ruleset modifications").
+
+Signed-off-by: Phil Sutter <psutter@redhat.com>
+---
+ iptables/nft.c | 27 +++++++++++++++++++++++----
+ 1 file changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/iptables/nft.c b/iptables/nft.c
+index d708fb6176b88..87fdd1e66152d 100644
+--- a/iptables/nft.c
++++ b/iptables/nft.c
+@@ -170,8 +170,24 @@ static void mnl_set_sndbuffer(const struct mnl_socket *nl,
+ 	nlbuffsiz = newbuffsiz;
+ }
+ 
++static int nlrcvbuffsiz;
++
++static void mnl_set_rcvbuffer(const struct mnl_socket *nl, int numcmds)
++{
++	int newbuffsiz = getpagesize() * numcmds;
++
++	if (newbuffsiz <= nlrcvbuffsiz)
++		return;
++
++	if (setsockopt(mnl_socket_get_fd(nl), SOL_SOCKET, SO_RCVBUFFORCE,
++		       &newbuffsiz, sizeof(socklen_t)) < 0)
++		return;
++
++	nlrcvbuffsiz = newbuffsiz;
++}
++
+ static ssize_t mnl_nft_socket_sendmsg(const struct mnl_socket *nf_sock,
+-				      struct nftnl_batch *batch)
++				      struct nftnl_batch *batch, int numcmds)
+ {
+ 	static const struct sockaddr_nl snl = {
+ 		.nl_family = AF_NETLINK
+@@ -186,13 +202,15 @@ static ssize_t mnl_nft_socket_sendmsg(const struct mnl_socket *nf_sock,
+ 	};
+ 
+ 	mnl_set_sndbuffer(nf_sock, batch);
++	mnl_set_rcvbuffer(nf_sock, numcmds);
+ 	nftnl_batch_iovec(batch, iov, iov_len);
+ 
+ 	return sendmsg(mnl_socket_get_fd(nf_sock), &msg, 0);
+ }
+ 
+ static int mnl_batch_talk(const struct mnl_socket *nf_sock,
+-			  struct nftnl_batch *batch, struct list_head *err_list)
++			  struct nftnl_batch *batch, int numcmds,
++			  struct list_head *err_list)
+ {
+ 	const struct mnl_socket *nl = nf_sock;
+ 	int ret, fd = mnl_socket_get_fd(nl), portid = mnl_socket_get_portid(nl);
+@@ -204,7 +222,7 @@ static int mnl_batch_talk(const struct mnl_socket *nf_sock,
+ 	};
+ 	int err = 0;
+ 
+-	ret = mnl_nft_socket_sendmsg(nf_sock, batch);
++	ret = mnl_nft_socket_sendmsg(nf_sock, batch, numcmds);
+ 	if (ret == -1)
+ 		return -1;
+ 
+@@ -748,6 +766,7 @@ static int nft_restart(struct nft_handle *h)
+ 		return -1;
+ 
+ 	h->portid = mnl_socket_get_portid(h->nl);
++	nlrcvbuffsiz = 0;
+ 
+ 	return 0;
+ }
+@@ -2728,7 +2747,7 @@ static int nft_action(struct nft_handle *h, int action)
+ 		break;
+ 	}
+ 
+-	ret = mnl_batch_talk(h->nl, h->batch, &h->err_list);
++	ret = mnl_batch_talk(h->nl, h->batch, seq, &h->err_list);
+ 
+ 	i = 0;
+ 	buflen = sizeof(errmsg);
+-- 
+2.22.0
+
