@@ -17,7 +17,7 @@ Name: iptables
 Summary: Tools for managing Linux kernel packet filtering capabilities
 URL: http://www.netfilter.org/projects/iptables
 Version: 1.8.4
-Release: 10%{?dist}
+Release: 1099%{?dist}
 Source: %{url}/files/%{name}-%{version}.tar.bz2
 Source1: iptables.init
 Source2: iptables-config
@@ -289,18 +289,18 @@ rm -f %{buildroot}%{_sysconfdir}/ethertypes
 %endif
 
 # drop all legacy tools
-rm -f %{buildroot}%{_sbindir}/*legacy*
-rm -f %{buildroot}%{_bindir}/iptables-xml
-rm -f %{buildroot}%{_mandir}/man1/iptables-xml*
-rm -f %{buildroot}%{_mandir}/man8/xtables-legacy*
+# rm -f %{buildroot}%{_sbindir}/*legacy*
+# rm -f %{buildroot}%{_bindir}/iptables-xml
+# rm -f %{buildroot}%{_mandir}/man1/iptables-xml*
+# rm -f %{buildroot}%{_mandir}/man8/xtables-legacy*
 
 # rename nft versions to standard name
 pfx=%{buildroot}%{_sbindir}/iptables
-for pfx in %{buildroot}%{_sbindir}/{iptables,ip6tables,arptables,ebtables}; do
-	mv $pfx-nft $pfx
-	mv $pfx-nft-restore $pfx-restore
-	mv $pfx-nft-save $pfx-save
-done
+# for pfx in %{buildroot}%{_sbindir}/{iptables,ip6tables,arptables,ebtables}; do
+#	mv $pfx-nft $pfx
+#	mv $pfx-nft-restore $pfx-restore
+#	mv $pfx-nft-save $pfx-save
+# done
 
 # extra sources for arptables
 install -p -D -m 644 %{SOURCE6} %{buildroot}%{_unitdir}/arptables.service
@@ -372,24 +372,40 @@ done
 %if 0%{?fedora} <= 24
 %{_sysconfdir}/ethertypes
 %endif
+%{_bindir}/iptables-xml
 %{_sbindir}/iptables
 %{_sbindir}/iptables-apply
 %{_sbindir}/iptables-restore
 %{_sbindir}/iptables-restore-translate
 %{_sbindir}/iptables-save
 %{_sbindir}/iptables-translate
+%{_sbindir}/iptables-nft
+%{_sbindir}/iptables-nft-restore
+%{_sbindir}/iptables-nft-save
+%{_sbindir}/ip6tables-nft
+%{_sbindir}/ip6tables-nft-restore
+%{_sbindir}/ip6tables-nft-save
 %{_sbindir}/ip6tables
 %{_sbindir}/ip6tables-restore
 %{_sbindir}/ip6tables-restore-translate
 %{_sbindir}/ip6tables-save
 %{_sbindir}/ip6tables-translate
+%{_sbindir}/ip6tables-legacy
+%{_sbindir}/ip6tables-legacy-restore
+%{_sbindir}/ip6tables-legacy-save
+%{_sbindir}/iptables-legacy
+%{_sbindir}/iptables-legacy-restore
+%{_sbindir}/iptables-legacy-save
 %{_sbindir}/xtables-monitor
 %{_sbindir}/xtables-nft-multi
+%{_sbindir}/xtables-legacy-multi
+%doc %{_mandir}/man1/iptables*
 %doc %{_mandir}/man8/iptables*
 %doc %{_mandir}/man8/ip6tables*
 %doc %{_mandir}/man8/xtables-monitor*
 %doc %{_mandir}/man8/xtables-nft*
 %doc %{_mandir}/man8/*tables-translate*
+%doc %{_mandir}/man8/xtables-legacy*
 %doc %{_mandir}/man8/*tables-restore-translate*
 %dir %{_libdir}/xtables
 %{_libdir}/xtables/libarpt*
@@ -459,6 +475,9 @@ done
 %doc %{_mandir}/man8/ebtables*.8*
 
 %changelog
+* Wed Jun 03 2020 root <root@localhost> - 1.8.4-1099.0
+- Fix for iptables-restore segfault under pressure	- add legacy files
+
 * Tue Mar 17 2020 Phil Sutter <psutter@redhat.com> - 1.8.4-10
 - Fix for iptables-restore segfault under pressure
 - Fix for iptables-save segfault under pressure
